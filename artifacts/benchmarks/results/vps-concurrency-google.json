@@ -1,0 +1,16 @@
+{
+  "benchmark": "Meno concurrent ingest stability smoke",
+  "run_id": "vps-google",
+  "events": 16,
+  "workers": 8,
+  "accepted": 16,
+  "expected_revision": 32,
+  "final_revision": 32,
+  "facet_count": 16,
+  "degraded": false,
+  "ingest_latency_ms": {
+    "mean": 71.96312127052806,
+    "max": 147.5688749924302
+  },
+  "passed": true
+}

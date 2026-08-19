@@ -1,0 +1,11 @@
+{
+  "run_at_utc": "2026-08-19T04:17:22Z",
+  "database": "meno_v1_final",
+  "rows": 84,
+  "roots": 1,
+  "dangling": 0,
+  "fork_points": 0,
+  "hash_mismatches": 0,
+  "tips": 1,
+  "passed": true
+}

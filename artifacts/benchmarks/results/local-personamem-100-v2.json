@@ -1,0 +1,1856 @@
+{
+  "benchmark": "PersonaMem-32k retrieval-only option-ranking adaptation",
+  "comparability": "Not comparable to the official end-to-end LLM accuracy metric",
+  "questions_sha256": "cccd34cf53e0bc4d9536c04cff5ca045156d9a4e227e83327112482840bbc93c",
+  "contexts_sha256": "217247ebfec9e8442fc53570c795ab69f21aad08745f7de78d9beab51b122d4a",
+  "run_id": "local-personamem-100-v2",
+  "items": 100,
+  "max_facets": 12,
+  "aggregate": {
+    "option_accuracy": 0.39,
+    "correct_support_at_k": 1.0,
+    "mrr": 0.6125,
+    "mean_latency_ms": 24.637873350220616
+  },
+  "by_question_type": {
+    "generalizing_to_new_scenarios": {
+      "option_accuracy": 0.8181818181818182,
+      "correct_support_at_k": 1.0,
+      "mrr": 0.893939393939394,
+      "mean_latency_ms": 21.878518909612797
+    },
+    "provide_preference_aligned_recommendations": {
+      "option_accuracy": 0.4,
+      "correct_support_at_k": 1.0,
+      "mrr": 0.6333333333333333,
+      "mean_latency_ms": 22.27319579978939
+    },
+    "recall_user_shared_facts": {
+      "option_accuracy": 0.2,
+      "correct_support_at_k": 1.0,
+      "mrr": 0.51,
+      "mean_latency_ms": 23.759935041016433
+    },
+    "recalling_the_reasons_behind_previous_updates": {
+      "option_accuracy": 0.6842105263157895,
+      "correct_support_at_k": 1.0,
+      "mrr": 0.8245614035087719,
+      "mean_latency_ms": 24.1951513158519
+    },
+    "suggest_new_ideas": {
+      "option_accuracy": 0.07142857142857142,
+      "correct_support_at_k": 1.0,
+      "mrr": 0.30357142857142855,
+      "mean_latency_ms": 22.055577499226533
+    },
+    "track_full_preference_evolution": {
+      "option_accuracy": 0.3333333333333333,
+      "correct_support_at_k": 1.0,
+      "mrr": 0.5912698412698413,
+      "mean_latency_ms": 30.376539666793263
+    }
+  },
+  "degraded_count": 0,
+  "results": [
+    {
+      "question_id": "8f6defba-992d-45f1-9a7d-dded76e6e5d5",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 3,
+      "predicted_option": 0,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        6.558860522362368,
+        6.202185578423635,
+        6.376538965568413,
+        6.558860522362368
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 20.054334003361873
+    },
+    {
+      "question_id": "0874afed-abd8-485c-b509-c06843a937cc",
+      "question_type": "provide_preference_aligned_recommendations",
+      "correct_option": 3,
+      "predicted_option": 3,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        13.117721044724735,
+        19.165755943321113,
+        12.606895420958743,
+        27.56539469663597
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 19.583708002755884
+    },
+    {
+      "question_id": "e79df41d-f6bb-43e5-acbd-b8cd732bac98",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 0,
+      "predicted_option": 2,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        1.5606477482646686,
+        9.814103991401444,
+        10.681604559106166,
+        8.455980507248249
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 18.463250002241693
+    },
+    {
+      "question_id": "9f8314e7-1429-4dc8-89d9-13ee94201379",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 3,
+      "predicted_option": 2,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        4.84406209427044,
+        3.996764233883237,
+        6.404709842535109,
+        6.048034898596376
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 17.751750005118083
+    },
+    {
+      "question_id": "c780b296-860d-4032-8580-154286255c00",
+      "question_type": "suggest_new_ideas",
+      "correct_option": 1,
+      "predicted_option": 3,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        20.73460045878996,
+        18.124130586026613,
+        21.427747639349903,
+        26.936786037213594
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 17.726999998558313
+    },
+    {
+      "question_id": "5b19b568-0c8f-43ac-8fdc-7f0ce67604e5",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 3,
+      "predicted_option": 2,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "option_scores": [
+        13.551585627354598,
+        4.64112125027375,
+        14.581205044535755,
+        8.435361220045513
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 17.81154199852608
+    },
+    {
+      "question_id": "24a0c4fd-b363-46ac-aae6-bfb23ef5e759",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 2,
+      "predicted_option": 0,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        9.120956810841498,
+        7.580511769894349,
+        8.455980507248249,
+        4.150914913710495
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 17.480666007031687
+    },
+    {
+      "question_id": "eb59980c-508c-4963-96d4-27ecf3c12b04",
+      "question_type": "suggest_new_ideas",
+      "correct_option": 2,
+      "predicted_option": 3,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        26.032917825337996,
+        21.217026608034253,
+        7.608682646861045,
+        33.61342959523235
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 17.703166995488573
+    },
+    {
+      "question_id": "bfbfeca4-9d35-46c3-9f25-fac27c44b0f1",
+      "question_type": "generalizing_to_new_scenarios",
+      "correct_option": 0,
+      "predicted_option": 0,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        14.041791963917852,
+        9.56237298323532,
+        8.68690424588142,
+        12.452973338686489
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 18.795374999172054
+    },
+    {
+      "question_id": "8823918d-36cc-4caa-87f7-075f846a0be5",
+      "question_type": "recalling_the_reasons_behind_previous_updates",
+      "correct_option": 3,
+      "predicted_option": 3,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        9.505802631746926,
+        10.709775436072862,
+        12.067898920226057,
+        18.452406055443646
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 17.77649999712594
+    },
+    {
+      "question_id": "fd81b480-5723-43fe-9fb1-d3efa0df8e49",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 1,
+      "predicted_option": 3,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        1.5200543512994151,
+        0.31608154697347907,
+        1.5200543512994151,
+        5.131972764277224
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 20.36204199976055
+    },
+    {
+      "question_id": "60023d63-4f11-47dc-8cef-82e3ca665a68",
+      "question_type": "provide_preference_aligned_recommendations",
+      "correct_option": 0,
+      "predicted_option": 1,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "option_scores": [
+        13.993189782078634,
+        17.60510819505644,
+        17.54876644112305,
+        12.42457386416479
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 19.83141699747648
+    },
+    {
+      "question_id": "c8a763a5-a7ae-4047-b1cf-f17204fd1f7d",
+      "question_type": "suggest_new_ideas",
+      "correct_option": 1,
+      "predicted_option": 0,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        23.44265065989217,
+        13.81086822528468,
+        20.167204483535574,
+        16.555286070557766
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 19.54874999501044
+    },
+    {
+      "question_id": "ce9c7c39-c600-4971-9a7d-51a46e6c915c",
+      "question_type": "suggest_new_ideas",
+      "correct_option": 1,
+      "predicted_option": 0,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        41.63577411740573,
+        14.406851657390979,
+        30.47151481150027,
+        19.964263639538885
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 19.62287500646198
+    },
+    {
+      "question_id": "217481b7-ad97-45d8-988f-abb3f9cf9b34",
+      "question_type": "recalling_the_reasons_behind_previous_updates",
+      "correct_option": 2,
+      "predicted_option": 1,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "option_scores": [
+        1.852112852796035,
+        5.464031265773843,
+        3.566911280887962,
+        4.770884085213898
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 19.284624999272637
+    },
+    {
+      "question_id": "b4812983-2c33-48ae-8955-1a19f78f7f54",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 1,
+      "predicted_option": 1,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        2.2537949288246137,
+        5.711562661975163,
+        5.018415481415218,
+        2.946942109384559
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 19.247374999395106
+    },
+    {
+      "question_id": "344ea859-e70d-48d2-8a97-7b68a104c6ae",
+      "question_type": "provide_preference_aligned_recommendations",
+      "correct_option": 0,
+      "predicted_option": 3,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "option_scores": [
+        16.525448874050202,
+        16.525448874050202,
+        19.647806127904975,
+        24.95432026165719
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 18.784457999572624
+    },
+    {
+      "question_id": "c6d22f3d-282f-4e11-b9fd-39e2a687ef18",
+      "question_type": "suggest_new_ideas",
+      "correct_option": 0,
+      "predicted_option": 2,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        19.71294921125798,
+        20.588417948611877,
+        28.168929718506227,
+        25.915134789681613
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 20.285083999624476
+    },
+    {
+      "question_id": "d90cadc8-e635-462b-8251-7f8a10734376",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 3,
+      "predicted_option": 2,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        3.0807020995640837,
+        4.977822084449965,
+        9.100566121193765,
+        5.825119944837168
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 20.40737499919487
+    },
+    {
+      "question_id": "07873ceb-93a3-45fe-9f72-b0c57fd95802",
+      "question_type": "suggest_new_ideas",
+      "correct_option": 0,
+      "predicted_option": 2,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        10.178747104989352,
+        27.11091082680337,
+        34.334747652758985,
+        24.00981803759155
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 19.88345900463173
+    },
+    {
+      "question_id": "6c4bc600-04c0-41be-841a-a1e149edd522",
+      "question_type": "provide_preference_aligned_recommendations",
+      "correct_option": 3,
+      "predicted_option": 3,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        18.39564772162504,
+        22.40038012515745,
+        15.785177848861691,
+        25.319151357575315
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 19.762750001973473
+    },
+    {
+      "question_id": "833601fa-de95-4fed-91d6-c9f45d778c84",
+      "question_type": "generalizing_to_new_scenarios",
+      "correct_option": 2,
+      "predicted_option": 2,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        15.2743522250957,
+        11.488080424973115,
+        21.805041870491372,
+        16.806829096393674
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 20.010583000839688
+    },
+    {
+      "question_id": "aa2c7800-7f7d-401b-acfa-9af67910f9f7",
+      "question_type": "recalling_the_reasons_behind_previous_updates",
+      "correct_option": 3,
+      "predicted_option": 1,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        8.75963953422317,
+        13.721713261704997,
+        7.730020117042012,
+        13.421380071699657
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 19.905124994693324
+    },
+    {
+      "question_id": "2a69f556-c093-4bc3-aa4a-a5acaaec3801",
+      "question_type": "generalizing_to_new_scenarios",
+      "correct_option": 2,
+      "predicted_option": 2,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        9.359848719123846,
+        9.69632095574506,
+        15.562034297547482,
+        14.868887116987537
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 20.075625005119946
+    },
+    {
+      "question_id": "c7c87a80-78e5-47d8-a068-2bfd244868f1",
+      "question_type": "recalling_the_reasons_behind_previous_updates",
+      "correct_option": 1,
+      "predicted_option": 3,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        4.179314388232194,
+        7.616879414065224,
+        6.76958155367802,
+        8.995205605535938
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 20.174208002572414
+    },
+    {
+      "question_id": "cffc32b7-fa14-457f-ac4f-9c060bf2aee1",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 1,
+      "predicted_option": 1,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        5.537209274830386,
+        10.35310049213413,
+        8.820623620836157,
+        8.099305563309516
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 19.668875000206754
+    },
+    {
+      "question_id": "856b5927-8865-4bb5-b1ac-38f965024508",
+      "question_type": "provide_preference_aligned_recommendations",
+      "correct_option": 0,
+      "predicted_option": 2,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        28.42066072667235,
+        0.3566749439387324,
+        32.38925408358889,
+        20.167204483535574
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 20.90991599834524
+    },
+    {
+      "question_id": "66ce550d-37a1-43e5-ab56-0b6864d8cbaf",
+      "question_type": "generalizing_to_new_scenarios",
+      "correct_option": 1,
+      "predicted_option": 1,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        13.965018905111938,
+        17.576937318089747,
+        11.711223976287325,
+        9.659953311574185
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 20.175875004497357
+    },
+    {
+      "question_id": "34e7e867-7730-4bb9-9dcf-bc5a93389b3a",
+      "question_type": "generalizing_to_new_scenarios",
+      "correct_option": 2,
+      "predicted_option": 2,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        4.8158912173037445,
+        5.865713341802422,
+        11.374751739666111,
+        8.455980507248249
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 20.79049999883864
+    },
+    {
+      "question_id": "08430f6d-ada1-46a7-8f15-ddc466ba8a5b",
+      "question_type": "suggest_new_ideas",
+      "correct_option": 1,
+      "predicted_option": 0,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        18.508976406932042,
+        7.280407177444011,
+        13.154088688895609,
+        17.451186112784185
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 20.650874997954816
+    },
+    {
+      "question_id": "394bc68d-a4b3-415c-a7d9-6b367fe44e25",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 2,
+      "predicted_option": 0,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "option_scores": [
+        6.93573817361862,
+        2.4079456086518722,
+        2.1198469563148747,
+        1.4266997757549296
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 20.351999999547843
+    },
+    {
+      "question_id": "f7be271f-8ee6-4250-ba76-2a72e50623fc",
+      "question_type": "generalizing_to_new_scenarios",
+      "correct_option": 1,
+      "predicted_option": 1,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        7.588479939543525,
+        14.119169584939197,
+        7.406158382749571,
+        10.324929615167434
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 20.187041998724453
+    },
+    {
+      "question_id": "e3d97461-ec4b-471f-a3f3-e595fdba27e5",
+      "question_type": "generalizing_to_new_scenarios",
+      "correct_option": 3,
+      "predicted_option": 0,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "option_scores": [
+        10.790748106843578,
+        9.586775302517642,
+        3.566911280887962,
+        9.586775302517642
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 20.545625004160684
+    },
+    {
+      "question_id": "ac681d8e-d3da-4f5c-93c1-46443fc77de9",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 1,
+      "predicted_option": 3,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        1.8964892818408743,
+        3.1004620861668104,
+        3.1004620861668104,
+        4.304434890492747
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 137.90354199591093
+    },
+    {
+      "question_id": "6ea0364f-7aab-4342-ada2-383eea15cb5b",
+      "question_type": "recalling_the_reasons_behind_previous_updates",
+      "correct_option": 0,
+      "predicted_option": 0,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        32.40945679090641,
+        15.168991709437874,
+        14.860690349783358,
+        19.830732246914362
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 22.55854100076249
+    },
+    {
+      "question_id": "c0cabd9b-7aa1-4893-bada-aed1c9f3c24c",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 1,
+      "predicted_option": 0,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        1.5804077348673953,
+        1.5804077348673953,
+        1.5804077348673953,
+        1.5804077348673953
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 22.33212500141235
+    },
+    {
+      "question_id": "a53dba76-2124-4083-9e61-d822ce4ce096",
+      "question_type": "recalling_the_reasons_behind_previous_updates",
+      "correct_option": 1,
+      "predicted_option": 1,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        22.352006540873237,
+        26.032501245452778,
+        14.293106392198759,
+        16.36457976422942
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 23.45700000296347
+    },
+    {
+      "question_id": "645b4647-5c04-47e3-a7e6-b3987fdb6a12",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 2,
+      "predicted_option": 0,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "option_scores": [
+        2.995101570508984,
+        1.791128766183048,
+        1.791128766183048,
+        1.791128766183048
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 22.262167003646027
+    },
+    {
+      "question_id": "d23ab70b-c037-44ae-95a8-f4ad0ad9e73b",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 1,
+      "predicted_option": 2,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "option_scores": [
+        6.436475769251176,
+        7.997123517515845,
+        15.529261703125979,
+        8.313393046819538
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 22.933000000193715
+    },
+    {
+      "question_id": "ca958afd-7fb1-497b-9234-735115cc3813",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 0,
+      "predicted_option": 1,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "option_scores": [
+        2.800357493716472,
+        4.004330298042408,
+        4.004330298042408,
+        2.800357493716472
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 25.057459002709948
+    },
+    {
+      "question_id": "56fb1ba3-55fa-41a9-b638-28622623534b",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 2,
+      "predicted_option": 2,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        2.5452600333559805,
+        2.5452600333559805,
+        3.566911280887962,
+        1.15896567223609
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 24.125083000399172
+    },
+    {
+      "question_id": "b6b02fef-10f1-444b-beb6-178ccbe55001",
+      "question_type": "recalling_the_reasons_behind_previous_updates",
+      "correct_option": 2,
+      "predicted_option": 2,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        12.700062014173016,
+        15.14414666944076,
+        26.16222346516814,
+        9.93544146158241
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 25.823584001045674
+    },
+    {
+      "question_id": "bdeba04a-c530-4d9f-8f1c-b28ef539cd37",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 3,
+      "predicted_option": 2,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        3.6228509293313493,
+        3.6228509293313493,
+        3.979525873270082,
+        3.979525873270082
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 24.376082998060156
+    },
+    {
+      "question_id": "0e5d627f-9f3e-4870-9943-196ae3ce59c9",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 0,
+      "predicted_option": 2,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        3.206453304869644,
+        3.717278928635635,
+        4.41042610919558,
+        3.717278928635635
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 47.64029099897016
+    },
+    {
+      "question_id": "53bb55a3-2ca8-4ab5-a590-f8b68f491128",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 1,
+      "predicted_option": 1,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        9.120956810841498,
+        10.170778935340175,
+        3.45776773315055,
+        9.98845737854622
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 22.86670899775345
+    },
+    {
+      "question_id": "f8edd318-d6b7-4943-a60c-c02e54f203d3",
+      "question_type": "suggest_new_ideas",
+      "correct_option": 3,
+      "predicted_option": 1,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        20.36972874764705,
+        34.488898332586245,
+        29.316332171343767,
+        12.067898920226057
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 22.097749999375083
+    },
+    {
+      "question_id": "fe2e91a8-fd23-4ea7-a3f1-722a0396712d",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 2,
+      "predicted_option": 0,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        9.49783446209775,
+        3.4779704404680696,
+        4.912638385872175,
+        4.912638385872175
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 22.467500006314367
+    },
+    {
+      "question_id": "b8e89a15-dbb5-4309-868a-3755bcb6b5da",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 0,
+      "predicted_option": 1,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "option_scores": [
+        4.9982127740976985,
+        13.426022404379252,
+        3.1010927892118176,
+        6.713011202189626
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 22.678250003082212
+    },
+    {
+      "question_id": "dbbd6663-a17f-4b84-8579-6d39ad99c738",
+      "question_type": "recalling_the_reasons_behind_previous_updates",
+      "correct_option": 0,
+      "predicted_option": 0,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        28.189132425823747,
+        12.865990036558612,
+        17.962011736550178,
+        17.80786105672292
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 22.648874997685198
+    },
+    {
+      "question_id": "5547721c-f72d-41cf-bfb5-65757d11807b",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 1,
+      "predicted_option": 2,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        3.1366417480074706,
+        3.493316691946203,
+        3.9839396083946745,
+        3.493316691946203
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 23.65529099915875
+    },
+    {
+      "question_id": "d4562a36-f9aa-4dcb-9033-434e5a1a4535",
+      "question_type": "recalling_the_reasons_behind_previous_updates",
+      "correct_option": 0,
+      "predicted_option": 0,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        35.05587772795541,
+        13.125501232043698,
+        18.038139617915874,
+        15.427669745152526
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 23.960124999575783
+    },
+    {
+      "question_id": "5e785751-2e80-460f-8a43-061f1ed9614e",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 0,
+      "predicted_option": 0,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        9.598552645075982,
+        9.598552645075982,
+        7.673261783223404,
+        9.011182560059078
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 25.047999995877035
+    },
+    {
+      "question_id": "49d46938-6c90-41e0-b16b-b81e626bec0e",
+      "question_type": "recalling_the_reasons_behind_previous_updates",
+      "correct_option": 1,
+      "predicted_option": 1,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        14.398466907856585,
+        25.935337496999132,
+        25.262393023756704,
+        24.386924286402806
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 26.11362500465475
+    },
+    {
+      "question_id": "daf0858c-cc77-4427-99bb-a5cd9e229688",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 2,
+      "predicted_option": 0,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "option_scores": [
+        2.8897410548511577,
+        2.042443194463954,
+        2.042443194463954,
+        2.042443194463954
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 25.245082993933465
+    },
+    {
+      "question_id": "bd08c0d8-fd79-408f-8014-90f0f1f4e890",
+      "question_type": "recalling_the_reasons_behind_previous_updates",
+      "correct_option": 1,
+      "predicted_option": 1,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        20.195603958057273,
+        28.112587964572835,
+        14.175739936427592,
+        9.69632095574506
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 25.421250000363216
+    },
+    {
+      "question_id": "bb0462d3-2527-4ed2-ac75-2869d57c851c",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 3,
+      "predicted_option": 3,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        6.991865804392221,
+        4.912424262712385,
+        5.114948526823859,
+        7.0120685117097405
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 23.05566699942574
+    },
+    {
+      "question_id": "a343bbd4-e356-41e0-886c-663304809410",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 2,
+      "predicted_option": 2,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        2.31793134447218,
+        2.31793134447218,
+        3.5219041487981158,
+        2.31793134447218
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 24.778500002867077
+    },
+    {
+      "question_id": "17273334-b524-4398-baae-bfb459f149e0",
+      "question_type": "recalling_the_reasons_behind_previous_updates",
+      "correct_option": 2,
+      "predicted_option": 2,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        13.498569710390788,
+        14.037566211123474,
+        28.493208032683885,
+        14.402209324711382
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 28.21175000281073
+    },
+    {
+      "question_id": "9c209ff7-a6a8-48d8-ab38-e0b8aa2aaef7",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 3,
+      "predicted_option": 0,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        6.558860522362368,
+        6.376538965568413,
+        6.202185578423635,
+        6.558860522362368
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 25.389750000613276
+    },
+    {
+      "question_id": "945fb104-45bd-457f-a9a8-19620159e47d",
+      "question_type": "provide_preference_aligned_recommendations",
+      "correct_option": 2,
+      "predicted_option": 2,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        13.117721044724735,
+        12.606895420958743,
+        27.56539469663597,
+        19.165755943321113
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 22.74679199763341
+    },
+    {
+      "question_id": "d3767473-d464-42c1-9ead-7a61d922f120",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 0,
+      "predicted_option": 3,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        1.5606477482646686,
+        8.455980507248249,
+        9.814103991401444,
+        10.681604559106166
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 23.329666000790894
+    },
+    {
+      "question_id": "a966820a-8b42-4ec9-8427-958468f98d3b",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 0,
+      "predicted_option": 3,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        6.048034898596376,
+        3.996764233883237,
+        4.84406209427044,
+        6.404709842535109
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 24.912290995416697
+    },
+    {
+      "question_id": "b51ec779-8dcc-4cef-860e-d9c3a6c622a6",
+      "question_type": "suggest_new_ideas",
+      "correct_option": 1,
+      "predicted_option": 3,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        21.427747639349903,
+        18.124130586026613,
+        20.73460045878996,
+        26.936786037213594
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 25.39499999693362
+    },
+    {
+      "question_id": "0a2a9eea-f552-4b6c-a224-4c499e158bbf",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 2,
+      "predicted_option": 2,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        3.717278928635635,
+        4.256275429368322,
+        6.153395414254203,
+        3.5631282488083764
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 23.473583001759835
+    },
+    {
+      "question_id": "89ba47ad-caf3-490b-85f4-c1ef0f888cbf",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 3,
+      "predicted_option": 1,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        2.5133061243096986,
+        6.125224537287507,
+        6.125224537287507,
+        2.5133061243096986
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 41.39329199824715
+    },
+    {
+      "question_id": "3e94a3d2-3b81-4e80-a013-32a6856edf72",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 1,
+      "predicted_option": 1,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        9.120956810841498,
+        10.170778935340175,
+        9.98845737854622,
+        3.45776773315055
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 24.034957998082973
+    },
+    {
+      "question_id": "2eb97916-b63b-46a1-8b9c-b3806962eb2c",
+      "question_type": "suggest_new_ideas",
+      "correct_option": 3,
+      "predicted_option": 2,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        20.36972874764705,
+        30.520304975669703,
+        35.69287113691218,
+        12.067898920226057
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 23.69791700039059
+    },
+    {
+      "question_id": "f861c1ff-df77-47fe-98b7-aa5b4f5c50c1",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 1,
+      "predicted_option": 3,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        3.4779704404680696,
+        4.912638385872175,
+        4.912638385872175,
+        9.49783446209775
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 24.004209000850096
+    },
+    {
+      "question_id": "93986f1c-0b49-4703-b42c-e3e03e85f66c",
+      "question_type": "suggest_new_ideas",
+      "correct_option": 2,
+      "predicted_option": 2,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        21.784422583288638,
+        19.011833861048856,
+        25.06783692929441,
+        24.7031938157065
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 24.067250000371132
+    },
+    {
+      "question_id": "2886f3ad-970c-42b5-a08a-4b0ebabd0415",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 0,
+      "predicted_option": 3,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        4.661740537476486,
+        6.048034898596376,
+        11.52890241949337,
+        12.067898920226057
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 23.557334003271535
+    },
+    {
+      "question_id": "72b88202-c053-4bf6-a2f5-74c3dc202232",
+      "question_type": "provide_preference_aligned_recommendations",
+      "correct_option": 3,
+      "predicted_option": 1,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "option_scores": [
+        15.379712740753527,
+        27.804286604918317,
+        22.960224510647876,
+        20.5804497789627
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 24.225250002928078
+    },
+    {
+      "question_id": "7028667b-f2aa-4e22-a2e3-2bb97f3d9605",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 3,
+      "predicted_option": 3,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        15.91032449195182,
+        18.164119420776434,
+        8.617911374394469,
+        18.6829132141916
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 24.705292002181523
+    },
+    {
+      "question_id": "1da9453e-94f6-4e6d-9ae4-b7481217fdd1",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 0,
+      "predicted_option": 2,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "option_scores": [
+        1.9370826788061277,
+        1.9370826788061277,
+        3.141055483132064,
+        2.7843805391933314
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 25.752875000762288
+    },
+    {
+      "question_id": "848b2923-33da-4ebc-86b5-e70374311fd2",
+      "question_type": "recalling_the_reasons_behind_previous_updates",
+      "correct_option": 2,
+      "predicted_option": 2,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        11.985893440920329,
+        8.017300084003788,
+        21.106850251761827,
+        9.914420068889669
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 27.048167001339607
+    },
+    {
+      "question_id": "0d49fda3-d417-4a47-9d8d-f6000ffa8097",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 2,
+      "predicted_option": 0,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "option_scores": [
+        5.29768666350303,
+        2.8897410548511577,
+        3.7652097922050576,
+        4.9691825965309935
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 27.14662500511622
+    },
+    {
+      "question_id": "4ca0a992-6743-4369-95b6-920712f8ef8b",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 2,
+      "predicted_option": 3,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        3.4165436331402894,
+        2.569245772753086,
+        2.569245772753086,
+        3.773218577079022
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 26.58116699603852
+    },
+    {
+      "question_id": "f04613eb-8eff-4a4c-a191-d2574c87e67b",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 2,
+      "predicted_option": 0,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "option_scores": [
+        3.8379856957715948,
+        2.634012891445659,
+        2.634012891445659,
+        2.634012891445659
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 26.118665999092627
+    },
+    {
+      "question_id": "221c8369-8ac4-447e-a13c-6088536f9abf",
+      "question_type": "recalling_the_reasons_behind_previous_updates",
+      "correct_option": 3,
+      "predicted_option": 0,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        14.547761131844458,
+        5.041958500097531,
+        10.242695538306704,
+        13.854613951284513
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 27.054833000875078
+    },
+    {
+      "question_id": "002e8df3-cebf-4197-8c16-cb834cc13aef",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 2,
+      "predicted_option": 1,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "option_scores": [
+        2.2125708288143535,
+        4.109690813700235,
+        3.598865189934244,
+        4.109690813700235
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 26.478125000721775
+    },
+    {
+      "question_id": "08814cb2-99dc-441d-b93b-8dcadf7f4859",
+      "question_type": "recalling_the_reasons_behind_previous_updates",
+      "correct_option": 1,
+      "predicted_option": 1,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        11.662433812117893,
+        25.41696028346918,
+        10.815135951730689,
+        19.936092762572187
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 27.244208999036346
+    },
+    {
+      "question_id": "c2d3daad-6d3b-4852-8830-39f830f6cd01",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 1,
+      "predicted_option": 3,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        3.773849280124029,
+        8.233065553489041,
+        3.0807020995640837,
+        9.100566121193765
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 25.391666997165885
+    },
+    {
+      "question_id": "96589b76-f0fa-4214-a110-c6f13ef15e83",
+      "question_type": "suggest_new_ideas",
+      "correct_option": 1,
+      "predicted_option": 2,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        25.906938022477433,
+        10.178747104989352,
+        30.029682059221233,
+        22.11269805270567
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 25.81695900153136
+    },
+    {
+      "question_id": "2b3ce0bd-d0c2-48e3-8cd8-564905e9fe64",
+      "question_type": "provide_preference_aligned_recommendations",
+      "correct_option": 2,
+      "predicted_option": 2,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        17.191674917299103,
+        19.11696577915168,
+        22.03573701156954,
+        16.98915065318763
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 25.780000003578607
+    },
+    {
+      "question_id": "b449e614-d27f-4df4-9fb2-b4726a3423d8",
+      "question_type": "generalizing_to_new_scenarios",
+      "correct_option": 1,
+      "predicted_option": 1,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        15.995898880177345,
+        20.81179009748109,
+        11.698801456288768,
+        13.07712764775948
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 25.148458997136913
+    },
+    {
+      "question_id": "3952f3c2-d810-4fd9-a461-8753406142a3",
+      "question_type": "recalling_the_reasons_behind_previous_updates",
+      "correct_option": 0,
+      "predicted_option": 3,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        13.778055015638389,
+        9.801493489072671,
+        11.880935030752507,
+        17.53615593879428
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 24.676665998413227
+    },
+    {
+      "question_id": "d71b360e-da59-480b-823e-a83e8c320b9c",
+      "question_type": "generalizing_to_new_scenarios",
+      "correct_option": 2,
+      "predicted_option": 2,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        7.1830148314353615,
+        9.947635384025967,
+        15.967499405655646,
+        14.76352660132971
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 25.21349999733502
+    },
+    {
+      "question_id": "7957ef21-86bb-4641-8a06-4ee2272f1c32",
+      "question_type": "recalling_the_reasons_behind_previous_updates",
+      "correct_option": 3,
+      "predicted_option": 3,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        7.791232801210001,
+        4.535989332170926,
+        5.922283693290816,
+        9.177527162329893
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 24.515832999895792
+    },
+    {
+      "question_id": "7a4ed201-4f7e-4d9c-a3f3-c5a2b8d424b3",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 2,
+      "predicted_option": 1,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        6.741182079156322,
+        8.099305563309516,
+        7.762833326688304,
+        7.434329259716267
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 24.857750002411194
+    },
+    {
+      "question_id": "afd724f4-8174-48d7-b9cd-34421c581550",
+      "question_type": "provide_preference_aligned_recommendations",
+      "correct_option": 1,
+      "predicted_option": 0,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        26.8802156857252,
+        26.012715118020477,
+        0.3566749439387324,
+        18.27008449864969
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 24.59887499571778
+    },
+    {
+      "question_id": "32b03409-0710-4afd-89c1-9af72c339b4c",
+      "question_type": "generalizing_to_new_scenarios",
+      "correct_option": 3,
+      "predicted_option": 2,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        10.458461007791957,
+        11.998906048739105,
+        15.456673781889656,
+        14.76352660132971
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 24.65091599879088
+    },
+    {
+      "question_id": "346a304a-4371-46ac-a8f7-021f25812b52",
+      "question_type": "generalizing_to_new_scenarios",
+      "correct_option": 2,
+      "predicted_option": 2,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        7.069686146128358,
+        8.455980507248249,
+        12.578724543992047,
+        7.223836825955617
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 25.07020800112514
+    },
+    {
+      "question_id": "2cef53ac-c165-41b5-a31f-c3064106471f",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 0,
+      "predicted_option": 0,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        11.739018888593591,
+        5.5166306028524374,
+        7.904373504186791,
+        6.055627103585125
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 26.117000001249835
+    },
+    {
+      "question_id": "4afc48ca-e6a7-4467-abd2-911915199315",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 0,
+      "predicted_option": 2,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.5,
+      "option_scores": [
+        2.1883971070870336,
+        1.475047219209569,
+        3.39236991141297,
+        2.1883971070870336
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 25.800041999900714
+    },
+    {
+      "question_id": "6142fba4-a233-405a-a4fe-a5b2e27374a7",
+      "question_type": "recalling_the_reasons_behind_previous_updates",
+      "correct_option": 2,
+      "predicted_option": 2,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        15.196974604074356,
+        12.963382382567262,
+        22.44898230699667,
+        17.576749335759533
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 27.54508399812039
+    },
+    {
+      "question_id": "defecce2-ff39-438e-ae41-90f3bcf9cb48",
+      "question_type": "track_full_preference_evolution",
+      "correct_option": 1,
+      "predicted_option": 1,
+      "correct": true,
+      "correct_supported": true,
+      "reciprocal_rank": 1.0,
+      "option_scores": [
+        9.355434983999254,
+        13.218251245372752,
+        5.427247041717752,
+        10.81030563672088
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 28.435541004000697
+    },
+    {
+      "question_id": "acd74206-37dc-4756-94a8-b99a395d9a21",
+      "question_type": "recall_user_shared_facts",
+      "correct_option": 2,
+      "predicted_option": 1,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        1.5200543512994151,
+        5.131972764277224,
+        0.31608154697347907,
+        1.5200543512994151
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 26.40191700629657
+    },
+    {
+      "question_id": "f546a74f-54de-40d0-9d88-8b0e30467d7b",
+      "question_type": "provide_preference_aligned_recommendations",
+      "correct_option": 3,
+      "predicted_option": 0,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "option_scores": [
+        17.60510819505644,
+        17.54876644112305,
+        12.42457386416479,
+        13.993189782078634
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 26.50879199791234
+    },
+    {
+      "question_id": "b3588797-acdf-40d3-bcc5-951f81896f95",
+      "question_type": "suggest_new_ideas",
+      "correct_option": 0,
+      "predicted_option": 3,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        13.81086822528468,
+        16.555286070557766,
+        20.167204483535574,
+        23.44265065989217
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 26.00283299398143
+    },
+    {
+      "question_id": "5370f186-0028-41f4-b436-c48575899fca",
+      "question_type": "suggest_new_ideas",
+      "correct_option": 1,
+      "predicted_option": 0,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.25,
+      "option_scores": [
+        41.63577411740573,
+        14.406851657390979,
+        19.964263639538885,
+        30.47151481150027
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 26.279165998857934
+    },
+    {
+      "question_id": "a40d5f67-8ec6-480b-a901-9709eecee9b9",
+      "question_type": "recalling_the_reasons_behind_previous_updates",
+      "correct_option": 3,
+      "predicted_option": 2,
+      "correct": false,
+      "correct_supported": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "option_scores": [
+        4.770884085213898,
+        1.852112852796035,
+        5.464031265773843,
+        3.566911280887962
+      ],
+      "facet_count": 12,
+      "degraded": false,
+      "latency_ms": 26.287874999979977
+    }
+  ]
+}

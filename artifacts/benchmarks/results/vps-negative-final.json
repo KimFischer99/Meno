@@ -1,0 +1,131 @@
+{
+  "benchmark": "Meno deterministic privacy and safety negative suite",
+  "run_id": "20260819T041102Z",
+  "passed": 6,
+  "total": 6,
+  "all_passed": true,
+  "results": [
+    {
+      "name": "cross_user_leakage_zero",
+      "passed": true,
+      "evidence": {
+        "trace_id": "86442243-f105-433f-8afd-7c41ea5dd2e7",
+        "user_id": "negative:20260819T041102Z:b",
+        "state_revision": 0,
+        "token_revision_id": "user-token:negative:20260819T041102Z:b:0",
+        "facets": [],
+        "rendered_context": "<user_context user_id=\"negative:20260819T041102Z:b\" revision=\"0\">\n</user_context>",
+        "degraded": false,
+        "policy_version": "meno-policy-1.0.0"
+      }
+    },
+    {
+      "name": "source_poisoning_rejected",
+      "passed": true,
+      "evidence": {
+        "trace_id": "6f9b43d2-abb9-479f-8f44-329e23f4fbee",
+        "user_id": "negative:20260819T041102Z:injection",
+        "state_revision": 2,
+        "token_revision_id": "user-token:negative:20260819T041102Z:injection:2",
+        "facets": [],
+        "rendered_context": "<user_context user_id=\"negative:20260819T041102Z:injection\" revision=\"2\">\n</user_context>",
+        "degraded": false,
+        "policy_version": "meno-policy-1.0.0"
+      }
+    },
+    {
+      "name": "assistant_not_primary_user_evidence",
+      "passed": true,
+      "evidence": {
+        "trace_id": "b28a39ed-b18d-493f-a4a3-a291a7098ccf",
+        "user_id": "negative:20260819T041102Z:assistant",
+        "state_revision": 2,
+        "token_revision_id": "user-token:negative:20260819T041102Z:assistant:2",
+        "facets": [],
+        "rendered_context": "<user_context user_id=\"negative:20260819T041102Z:assistant\" revision=\"2\">\n</user_context>",
+        "degraded": false,
+        "policy_version": "meno-policy-1.0.0"
+      }
+    },
+    {
+      "name": "sensitive_default_deny",
+      "passed": true,
+      "evidence": {
+        "trace_id": "0803fcb2-037c-49b8-8e11-d5fba33eb72a",
+        "user_id": "negative:20260819T041102Z:sensitive",
+        "state_revision": 2,
+        "token_revision_id": "user-token:negative:20260819T041102Z:sensitive:2",
+        "facets": [],
+        "rendered_context": "<user_context user_id=\"negative:20260819T041102Z:sensitive\" revision=\"2\">\n</user_context>",
+        "degraded": false,
+        "policy_version": "meno-policy-1.0.0"
+      }
+    },
+    {
+      "name": "consent_revoke_blocks_retrieval",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "trace_id": "2cd2f1dc-6f07-48dc-8efd-0dba3b7c0c93",
+          "user_id": "negative:20260819T041102Z:consent",
+          "state_revision": 2,
+          "token_revision_id": "user-token:negative:20260819T041102Z:consent:2",
+          "facets": [
+            {
+              "claim_id": "cc1bb674-be9d-40da-80c3-c362e6f4f932",
+              "kind": "preference",
+              "value": "Python",
+              "relevance": 0.7360836825347259,
+              "confidence": 0.8999999931576186,
+              "evidence_ids": [
+                "42587802-fb99-4d75-b5b2-4a9dc36a669d"
+              ],
+              "why_selected": [
+                "semantic match",
+                "active claim",
+                "evidence present",
+                "purpose allowed"
+              ]
+            }
+          ],
+          "rendered_context": "<user_context user_id=\"negative:20260819T041102Z:consent\" revision=\"2\">\n- [preference] Python (confidence=0.900, evidence=42587802-fb99-4d75-b5b2-4a9dc36a669d)\n</user_context>",
+          "degraded": false,
+          "policy_version": "meno-policy-1.0.0"
+        },
+        "after": {
+          "trace_id": "d1b38baa-8ab1-49c7-b6a3-368207b0f74c",
+          "user_id": "negative:20260819T041102Z:consent",
+          "state_revision": 3,
+          "token_revision_id": "user-token:negative:20260819T041102Z:consent:3",
+          "facets": [],
+          "rendered_context": "<user_context user_id=\"negative:20260819T041102Z:consent\" revision=\"3\">\n</user_context>",
+          "degraded": false,
+          "policy_version": "meno-policy-1.0.0"
+        }
+      }
+    },
+    {
+      "name": "deletion_propagates_online",
+      "passed": true,
+      "evidence": {
+        "deletion": {
+          "trace_id": "dc640a32-6c43-44f1-8c30-7ba685df9196",
+          "deletion_job_id": "88d20d4a-5023-4d61-968f-0d99dd52b7b3",
+          "state_revision": 3,
+          "receipt_hash": "sha256:e79a54ae40c11b24c7ee4829ad583e3c4a7408703749475d35f84025ea01d0c2",
+          "status": "completed"
+        },
+        "after": {
+          "trace_id": "1cd60ce2-8157-4f57-87ee-76ac02db9a36",
+          "user_id": "negative:20260819T041102Z:deletion",
+          "state_revision": 3,
+          "token_revision_id": "user-token:negative:20260819T041102Z:deletion:3",
+          "facets": [],
+          "rendered_context": "<user_context user_id=\"negative:20260819T041102Z:deletion\" revision=\"3\">\n</user_context>",
+          "degraded": false,
+          "policy_version": "meno-policy-1.0.0"
+        }
+      }
+    }
+  ]
+}
