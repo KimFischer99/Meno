@@ -181,6 +181,137 @@ class GoogleEmbedder:
         return [value / norm for value in vector]
 
 
+class OpenAICompatEmbedder:
+    """OpenAI-compatible embeddings (e.g. SiliconFlow BAAI/bge-m3).
+
+    Talks to POST {base_url}/embeddings with an Authorization: Bearer key.
+    Shares the same retry/backoff/circuit-breaker discipline as GoogleEmbedder.
+    """
+
+    def __init__(self, settings: Settings, *, transport: httpx.BaseTransport | None = None) -> None:
+        if not settings.openai_api_key:
+            raise ValueError(
+                "OpenAI-compatible embedding API key is required; set MENO_OPENAI_API_KEY"
+            )
+        self.model = settings.embedding_model
+        self.dimension = settings.embedding_dimension
+        self.batch_size = settings.openai_batch_size
+        self.max_retries = settings.openai_max_retries
+        self._circuit_threshold = settings.openai_circuit_breaker_threshold
+        self._circuit_cooldown = settings.openai_circuit_breaker_seconds
+        self._circuit_lock = threading.Lock()
+        self._consecutive_failures = 0
+        self._circuit_open_until = 0.0
+        self._client = httpx.Client(
+            base_url=settings.openai_base_url,
+            headers={"Authorization": f"Bearer {settings.openai_api_key}"},
+            timeout=httpx.Timeout(settings.openai_timeout_seconds),
+            limits=httpx.Limits(max_connections=4, max_keepalive_connections=2),
+            transport=transport,
+            trust_env=False,
+        )
+
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        vectors: list[list[float]] = []
+        for offset in range(0, len(texts), self.batch_size):
+            vectors.extend(self._embed(texts[offset : offset + self.batch_size]))
+        return vectors
+
+    def embed_query(self, text: str) -> list[float]:
+        return self._embed([text])[0]
+
+    def close(self) -> None:
+        self._client.close()
+
+    def _embed(self, texts: list[str]) -> list[list[float]]:
+        if not texts:
+            return []
+        payload = {"model": self.model, "input": texts}
+        body = self._post("/embeddings", payload)
+        data = body.get("data") or []
+        if len(data) != len(texts):
+            raise EmbeddingError(
+                "OpenAI-compatible embedding API returned an unexpected number of vectors"
+            )
+        by_index = {int(item.get("index", 0)): item.get("embedding", []) for item in data}
+        return [self._validate_and_normalize(by_index[i]) for i in range(len(texts))]
+
+    def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
+        self._circuit_check()
+        for attempt in range(self.max_retries + 1):
+            try:
+                response = self._client.post(path, json=payload)
+            except httpx.HTTPError as exc:
+                if attempt >= self.max_retries:
+                    self._record_failure()
+                    raise EmbeddingError("OpenAI-compatible embedding transport failure") from exc
+                self._backoff(attempt)
+                continue
+            if response.is_success:
+                body = response.json()
+                if not isinstance(body, dict):
+                    raise EmbeddingError(
+                        "OpenAI-compatible embedding API returned an invalid response"
+                    )
+                self._record_success()
+                return body
+            if response.status_code not in {408, 429, 500, 502, 503, 504}:
+                raise EmbeddingError(
+                    f"OpenAI-compatible embedding API rejected the request ({response.status_code})"
+                )
+            if attempt >= self.max_retries:
+                self._record_failure()
+                raise EmbeddingError(
+                    f"OpenAI-compatible embedding API remained unavailable ({response.status_code})"
+                )
+            retry_after = response.headers.get("retry-after", "")
+            self._backoff(attempt, retry_after)
+        raise AssertionError("unreachable")
+
+    def _circuit_check(self) -> None:
+        with self._circuit_lock:
+            open_until = self._circuit_open_until
+        if open_until and time.monotonic() < open_until:
+            raise EmbeddingError("embedding API circuit breaker is open")
+
+    def _record_success(self) -> None:
+        with self._circuit_lock:
+            self._consecutive_failures = 0
+            self._circuit_open_until = 0.0
+
+    def _record_failure(self) -> None:
+        with self._circuit_lock:
+            self._consecutive_failures += 1
+            if self._consecutive_failures >= self._circuit_threshold:
+                self._circuit_open_until = time.monotonic() + self._circuit_cooldown
+                log.warning(
+                    "embedding circuit breaker open for %.1fs after %d failures",
+                    self._circuit_cooldown,
+                    self._consecutive_failures,
+                )
+
+    def _backoff(self, attempt: int, retry_after: str = "") -> None:
+        try:
+            delay = min(10.0, max(0.0, float(retry_after)))
+        except ValueError:
+            delay = 0.0
+        if not delay:
+            delay = min(10.0, 0.25 * (2**attempt)) + random.uniform(0, 0.1)
+        time.sleep(delay)
+
+    def _validate_and_normalize(self, values: Any) -> list[float]:
+        if not isinstance(values, list) or len(values) != self.dimension:
+            raise EmbeddingError(
+                f"embedding dimension mismatch; expected {self.dimension}, got "
+                f"{len(values) if isinstance(values, list) else 'non-list'}"
+            )
+        vector = [float(value) for value in values]
+        norm = math.sqrt(sum(value * value for value in vector))
+        if not math.isfinite(norm) or norm == 0:
+            raise EmbeddingError("embedding API returned an invalid vector")
+        return [value / norm for value in vector]
+
+
 @dataclass(frozen=True)
 class VectorHit:
     claim_id: str
@@ -461,9 +592,11 @@ class QdrantVectorStore:
 
 
 def make_embedder(settings: Settings) -> Embedder:
-    if settings.embedding_provider != "google":
-        raise ValueError("only Google cloud embeddings are supported")
-    return GoogleEmbedder(settings)
+    if settings.embedding_provider == "google":
+        return GoogleEmbedder(settings)
+    if settings.embedding_provider == "siliconflow":
+        return OpenAICompatEmbedder(settings)
+    raise ValueError("only 'google' or 'siliconflow' embedding providers are supported")
 
 
 def make_vector_store(settings: Settings, embedder: Embedder) -> VectorStore:

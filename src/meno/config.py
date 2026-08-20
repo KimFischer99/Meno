@@ -56,6 +56,13 @@ class Settings:
     google_max_retries: int = 4
     google_circuit_breaker_threshold: int = 3
     google_circuit_breaker_seconds: float = 30.0
+    openai_api_key: str = field(default="", repr=False)
+    openai_base_url: str = "https://api.siliconflow.cn/v1"
+    openai_timeout_seconds: float = 15.0
+    openai_batch_size: int = 32
+    openai_max_retries: int = 4
+    openai_circuit_breaker_threshold: int = 3
+    openai_circuit_breaker_seconds: float = 30.0
     vector_upsert_batch_size: int = 128
     outbox_commit_batch_size: int = 32
     outbox_retry_base_seconds: float = 1.0
@@ -106,6 +113,19 @@ class Settings:
             google_circuit_breaker_seconds=float(
                 _env("MENO_GOOGLE_CIRCUIT_BREAKER_SECONDS", "30")
             ),
+            openai_api_key=_env("MENO_OPENAI_API_KEY", ""),
+            openai_base_url=_env(
+                "MENO_OPENAI_BASE_URL", "https://api.siliconflow.cn/v1"
+            ).rstrip("/"),
+            openai_timeout_seconds=float(_env("MENO_OPENAI_TIMEOUT_SECONDS", "15")),
+            openai_batch_size=int(_env("MENO_OPENAI_BATCH_SIZE", "32")),
+            openai_max_retries=int(_env("MENO_OPENAI_MAX_RETRIES", "4")),
+            openai_circuit_breaker_threshold=int(
+                _env("MENO_OPENAI_CIRCUIT_BREAKER_THRESHOLD", "3")
+            ),
+            openai_circuit_breaker_seconds=float(
+                _env("MENO_OPENAI_CIRCUIT_BREAKER_SECONDS", "30")
+            ),
             vector_upsert_batch_size=int(
                 _env("MENO_VECTOR_UPSERT_BATCH_SIZE", "128")
             ),
@@ -130,9 +150,9 @@ class Settings:
         return settings
 
     def validate(self) -> None:
-        if self.embedding_provider != "google":
-            raise ValueError("MENO_EMBEDDING_PROVIDER must be google")
-        if not re.fullmatch(r"[A-Za-z0-9._-]+", self.embedding_model):
+        if self.embedding_provider not in {"google", "siliconflow"}:
+            raise ValueError("MENO_EMBEDDING_PROVIDER must be google or siliconflow")
+        if not re.fullmatch(r"[A-Za-z0-9./_-]+", self.embedding_model):
             raise ValueError("MENO_EMBEDDING_MODEL is invalid")
         if not 128 <= self.embedding_dimension <= 3072:
             raise ValueError("embedding dimension must be between 128 and 3072")
@@ -150,6 +170,18 @@ class Settings:
             raise ValueError("MENO_GOOGLE_CIRCUIT_BREAKER_THRESHOLD must be between 1 and 32")
         if self.google_circuit_breaker_seconds <= 0:
             raise ValueError("MENO_GOOGLE_CIRCUIT_BREAKER_SECONDS must be positive")
+        if not 1 <= self.openai_batch_size <= 128:
+            raise ValueError("MENO_OPENAI_BATCH_SIZE must be between 1 and 128")
+        if self.openai_timeout_seconds <= 0:
+            raise ValueError("MENO_OPENAI_TIMEOUT_SECONDS must be positive")
+        if not 0 <= self.openai_max_retries <= 8:
+            raise ValueError("MENO_OPENAI_MAX_RETRIES must be between 0 and 8")
+        if not 1 <= self.openai_circuit_breaker_threshold <= 32:
+            raise ValueError(
+                "MENO_OPENAI_CIRCUIT_BREAKER_THRESHOLD must be between 1 and 32"
+            )
+        if self.openai_circuit_breaker_seconds <= 0:
+            raise ValueError("MENO_OPENAI_CIRCUIT_BREAKER_SECONDS must be positive")
         if not 1 <= self.outbox_commit_batch_size <= 256:
             raise ValueError("MENO_OUTBOX_COMMIT_BATCH_SIZE must be between 1 and 256")
         if self.outbox_retry_base_seconds <= 0:
@@ -175,7 +207,11 @@ class Settings:
                 raise ValueError("production requires PostgreSQL")
             if self.vector_mode != "qdrant":
                 raise ValueError("production requires Qdrant")
-            if len(self.google_api_key) < 20:
+            if self.embedding_provider == "google" and len(self.google_api_key) < 20:
                 raise ValueError("production requires a Google embedding API key")
+            if self.embedding_provider == "siliconflow" and len(self.openai_api_key) < 20:
+                raise ValueError(
+                    "production requires an OpenAI-compatible embedding API key"
+                )
             if len(self.api_token) < 32:
                 raise ValueError("production requires MENO_API_TOKEN with at least 32 characters")
