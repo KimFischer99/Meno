@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import math
+import threading
 import uuid
-from datetime import UTC, datetime
+from collections import deque
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import delete, select, text
+from sqlalchemy import delete, func, select, text
 from sqlalchemy.dialects.postgresql import insert as postgresql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import Session, selectinload
@@ -44,6 +47,8 @@ PURPOSE_SCOPE = {
     "proactive_suggestion": "proactive_suggestion",
 }
 
+log = logging.getLogger(__name__)
+
 
 def _id() -> str:
     return str(uuid.uuid4())
@@ -71,6 +76,8 @@ class MenoService:
         self.session_factory = session_factory
         self.vector_store = vector_store
         self.engine = engine
+        self._audit_buffer: deque[dict[str, Any]] = deque()
+        self._audit_lock = threading.Lock()
 
     def close(self) -> None:
         self.vector_store.close()
@@ -233,10 +240,24 @@ class MenoService:
         }
 
     def process_outbox(self, limit: int = 100) -> int:
+        processed = 0
+        while processed < limit:
+            chunk_size = min(self.settings.outbox_commit_batch_size, limit - processed)
+            count = self._process_outbox_chunk(chunk_size)
+            if count <= 0:
+                break
+            processed += count
+        return processed
+
+    def _process_outbox_chunk(self, limit: int) -> int:
+        now = _now()
         with self.session_factory() as session:
             rows = session.scalars(
                 select(Outbox)
-                .where(Outbox.status == "pending")
+                .where(
+                    Outbox.status == "pending",
+                    (Outbox.next_attempt_at.is_(None)) | (Outbox.next_attempt_at <= now),
+                )
                 .order_by(Outbox.created_at)
                 .limit(limit)
                 .with_for_update(skip_locked=True)
@@ -306,6 +327,8 @@ class MenoService:
                                 user_id=claim.user_id,
                                 status=claim.status,
                                 text=claim.value,
+                                valid_from=claim.valid_from,
+                                valid_to=claim.valid_to,
                             )
                         )
 
@@ -334,31 +357,79 @@ class MenoService:
                     row.status = "processed"
                     row.processed_at = _now()
                     row.error = None
+                    row.next_attempt_at = None
                 session.commit()
                 return len(rows)
             except Exception as exc:  # noqa: BLE001 - outbox retains provider failures
                 session.rollback()
-                with self.session_factory.begin() as failure_session:
-                    failed_rows = failure_session.scalars(
-                        select(Outbox)
-                        .where(Outbox.id.in_(row_ids))
-                        .with_for_update(skip_locked=True)
-                    ).all()
-                    for failed in failed_rows:
-                        failed.attempts += 1
-                        failed.error = str(exc)[:4000]
-                        if failed.attempts >= 20:
-                            failed.status = "failed"
+                self._mark_outbox_failure(row_ids, exc)
                 return 0
+
+    def _mark_outbox_failure(self, row_ids: list[str], exc: Exception) -> None:
+        with self.session_factory.begin() as failure_session:
+            failed_rows = failure_session.scalars(
+                select(Outbox)
+                .where(Outbox.id.in_(row_ids))
+                .with_for_update(skip_locked=True)
+            ).all()
+            now = _now()
+            for failed in failed_rows:
+                failed.attempts += 1
+                failed.error = str(exc)[:4000]
+                if failed.attempts >= 20:
+                    failed.status = "failed"
+                    failed.next_attempt_at = None
+                else:
+                    delay = min(
+                        self.settings.outbox_retry_max_seconds,
+                        self.settings.outbox_retry_base_seconds * (2 ** (failed.attempts - 1)),
+                    )
+                    failed.next_attempt_at = now + timedelta(seconds=delay)
+
+    def requeue_failed_outbox(self, limit: int | None = None) -> int:
+        with self.session_factory.begin() as session:
+            statement = (
+                select(Outbox).where(Outbox.status == "failed").order_by(Outbox.created_at)
+            )
+            if limit is not None:
+                statement = statement.limit(limit)
+            rows = session.scalars(statement).all()
+            for row in rows:
+                row.status = "pending"
+                row.attempts = 0
+                row.error = None
+                row.next_attempt_at = None
+            return len(rows)
+
+    def drain_status(self, user_id: str) -> dict[str, Any]:
+        with self.session_factory() as session:
+            counts = {
+                status: session.scalar(
+                    select(func.count(Outbox.id))
+                    .join(Event, Outbox.event_id == Event.id)
+                    .where(Event.user_id == user_id, Outbox.status == status)
+                )
+                or 0
+                for status in ("pending", "failed")
+            }
+        return {
+            "user_id": user_id,
+            "pending_outbox": counts["pending"],
+            "failed_outbox": counts["failed"],
+            "drained": counts["pending"] == 0,
+            "policy_version": self.settings.policy_version,
+        }
 
     def retrieve(self, request: RetrieveRequest) -> RetrieveResponse:
         trace_id = _id()
         degraded = False
+        as_of = _aware(request.context.as_of) if request.context.as_of else _now()
         try:
             hits = self.vector_store.search(
                 request.user_id,
                 request.context.query,
                 limit=max(32, request.constraints.max_facets * 4),
+                as_of=as_of,
             )
         except Exception:  # noqa: BLE001 - any vector failure activates canonical fallback
             hits = []
@@ -399,7 +470,6 @@ class MenoService:
                 ).all()
             )
             facets: list[Facet] = []
-            as_of = _aware(request.context.as_of) if request.context.as_of else _now()
             for hit in hits:
                 claim = claims_by_id.get(hit.claim_id)
                 if claim is None:
@@ -425,24 +495,23 @@ class MenoService:
             facets.sort(key=lambda item: item.relevance, reverse=True)
             facets = facets[: request.constraints.max_facets]
             rendered = self._render(request.user_id, revision, facets, request.constraints.max_rendered_tokens)
-            for facet in facets:
-                self._audit(
-                    session,
-                    event_name="meno.retrieve.facet_selected",
-                    trace_id=trace_id,
-                    user_id=request.user_id,
-                    claim_id=facet.claim_id,
-                    action="retrieve",
-                    purpose=request.purpose,
-                    decision={
-                        "allowed": True,
-                        "relevance": facet.relevance,
-                        "effective_confidence": facet.confidence,
-                        "policy_version": self.settings.policy_version,
-                    },
-                    revision=revision,
-                    event_ids=facet.evidence_ids,
-                )
+        for facet in facets:
+            self._buffer_audit(
+                event_name="meno.retrieve.facet_selected",
+                trace_id=trace_id,
+                user_id=request.user_id,
+                claim_id=facet.claim_id,
+                action="retrieve",
+                purpose=request.purpose,
+                decision={
+                    "allowed": True,
+                    "relevance": facet.relevance,
+                    "effective_confidence": facet.confidence,
+                    "policy_version": self.settings.policy_version,
+                },
+                revision=revision,
+                event_ids=facet.evidence_ids,
+            )
         return RetrieveResponse(
             trace_id=trace_id,
             user_id=request.user_id,
@@ -476,7 +545,14 @@ class MenoService:
             if request.action == "confirm":
                 claim.confidence = max(claim.confidence, 0.98)
                 claim.updated_at = _now()
-                self.vector_store.upsert(claim.id, claim.user_id, claim.status, claim.value)
+                self.vector_store.upsert(
+                    claim.id,
+                    claim.user_id,
+                    claim.status,
+                    claim.value,
+                    valid_from=claim.valid_from,
+                    valid_to=claim.valid_to,
+                )
             elif request.action == "reject":
                 claim.status = "rejected"
                 claim.valid_to = _now()
@@ -540,7 +616,12 @@ class MenoService:
                     )
                 )
                 self.vector_store.upsert(
-                    replacement.id, replacement.user_id, replacement.status, replacement.value
+                    replacement.id,
+                    replacement.user_id,
+                    replacement.status,
+                    replacement.value,
+                    valid_from=replacement.valid_from,
+                    valid_to=replacement.valid_to,
                 )
             revision = self._bump_revision(session, request.user_id)
             self._audit(
@@ -785,6 +866,8 @@ class MenoService:
                         user_id=claim.user_id,
                         status=claim.status,
                         text=claim.value,
+                        valid_from=claim.valid_from,
+                        valid_to=claim.valid_to,
                     )
                     for claim in claims
                 ]
@@ -884,6 +967,30 @@ class MenoService:
             row.updated_at = values["updated_at"]
         session.flush()
         return row.revision
+
+    def _buffer_audit(self, **entry: Any) -> None:
+        with self._audit_lock:
+            if len(self._audit_buffer) >= self.settings.audit_buffer_max:
+                self._audit_buffer.popleft()
+                log.warning("audit buffer full; dropping oldest buffered audit event")
+            self._audit_buffer.append(entry)
+
+    def flush_audit_buffer(self) -> int:
+        with self._audit_lock:
+            batch = list(self._audit_buffer)
+            self._audit_buffer.clear()
+        if not batch:
+            return 0
+        try:
+            with self.session_factory.begin() as session:
+                for entry in batch:
+                    self._audit(session, **entry)
+        except Exception:  # buffered audits must survive transient DB failures
+            log.exception("audit flush failed; rebuffering %d events", len(batch))
+            with self._audit_lock:
+                self._audit_buffer.extendleft(reversed(batch))
+            return 0
+        return len(batch)
 
     def _audit(
         self,

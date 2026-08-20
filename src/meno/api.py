@@ -54,6 +54,7 @@ def create_app(
         async def worker() -> None:
             while not stop.is_set():
                 await asyncio.to_thread(service.process_outbox)
+                await asyncio.to_thread(service.flush_audit_buffer)
                 try:
                     await asyncio.wait_for(stop.wait(), timeout=resolved.worker_poll_seconds)
                 except TimeoutError:
@@ -65,6 +66,7 @@ def create_app(
         task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await task
+        service.flush_audit_buffer()
         service.close()
 
     app = FastAPI(
@@ -171,6 +173,10 @@ def create_app(
     @app.get("/v1/revisions/{user_id}")
     def revisions(user_id: str):
         return service.revisions(user_id)
+
+    @app.get("/v1/users/{user_id}/drain")
+    def drain(user_id: str):
+        return service.drain_status(user_id)
 
     app.state.meno = service
     return app

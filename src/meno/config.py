@@ -54,7 +54,13 @@ class Settings:
     google_timeout_seconds: float = 15.0
     google_batch_size: int = 32
     google_max_retries: int = 4
+    google_circuit_breaker_threshold: int = 3
+    google_circuit_breaker_seconds: float = 30.0
     vector_upsert_batch_size: int = 128
+    outbox_commit_batch_size: int = 32
+    outbox_retry_base_seconds: float = 1.0
+    outbox_retry_max_seconds: float = 300.0
+    audit_buffer_max: int = 10_000
     policy_version: str = "meno-policy-1.0.0"
     extractor_version: str = "meno-extractor-1.0.0"
     worker_poll_seconds: float = 0.2
@@ -94,9 +100,23 @@ class Settings:
             ),
             google_batch_size=int(_env("MENO_GOOGLE_BATCH_SIZE", "32")),
             google_max_retries=int(_env("MENO_GOOGLE_MAX_RETRIES", "4")),
+            google_circuit_breaker_threshold=int(
+                _env("MENO_GOOGLE_CIRCUIT_BREAKER_THRESHOLD", "3")
+            ),
+            google_circuit_breaker_seconds=float(
+                _env("MENO_GOOGLE_CIRCUIT_BREAKER_SECONDS", "30")
+            ),
             vector_upsert_batch_size=int(
                 _env("MENO_VECTOR_UPSERT_BATCH_SIZE", "128")
             ),
+            outbox_commit_batch_size=int(_env("MENO_OUTBOX_COMMIT_BATCH_SIZE", "32")),
+            outbox_retry_base_seconds=float(
+                _env("MENO_OUTBOX_RETRY_BASE_SECONDS", "1")
+            ),
+            outbox_retry_max_seconds=float(
+                _env("MENO_OUTBOX_RETRY_MAX_SECONDS", "300")
+            ),
+            audit_buffer_max=int(_env("MENO_AUDIT_BUFFER_MAX", "10000")),
             policy_version=_env("MENO_POLICY_VERSION", "meno-policy-1.0.0"),
             extractor_version=_env(
                 "MENO_EXTRACTOR_VERSION", "meno-extractor-1.0.0"
@@ -126,6 +146,20 @@ class Settings:
             raise ValueError("MENO_GOOGLE_TIMEOUT_SECONDS must be positive")
         if not 0 <= self.google_max_retries <= 8:
             raise ValueError("MENO_GOOGLE_MAX_RETRIES must be between 0 and 8")
+        if not 1 <= self.google_circuit_breaker_threshold <= 32:
+            raise ValueError("MENO_GOOGLE_CIRCUIT_BREAKER_THRESHOLD must be between 1 and 32")
+        if self.google_circuit_breaker_seconds <= 0:
+            raise ValueError("MENO_GOOGLE_CIRCUIT_BREAKER_SECONDS must be positive")
+        if not 1 <= self.outbox_commit_batch_size <= 256:
+            raise ValueError("MENO_OUTBOX_COMMIT_BATCH_SIZE must be between 1 and 256")
+        if self.outbox_retry_base_seconds <= 0:
+            raise ValueError("MENO_OUTBOX_RETRY_BASE_SECONDS must be positive")
+        if self.outbox_retry_max_seconds < self.outbox_retry_base_seconds:
+            raise ValueError(
+                "MENO_OUTBOX_RETRY_MAX_SECONDS must be >= MENO_OUTBOX_RETRY_BASE_SECONDS"
+            )
+        if self.audit_buffer_max < 1:
+            raise ValueError("MENO_AUDIT_BUFFER_MAX must be positive")
         if self.google_credentials_file:
             path = Path(self.google_credentials_file).expanduser()
             if not path.is_file():

@@ -12,6 +12,11 @@ def main() -> None:
     subparsers = parser.add_subparsers(dest="command", required=True)
     subparsers.add_parser("serve", help="Run the Meno HTTP sidecar")
     subparsers.add_parser("process-once", help="Process pending outbox events once")
+    requeue = subparsers.add_parser(
+        "requeue-failed",
+        help="Move failed outbox rows back to pending for another processing attempt",
+    )
+    requeue.add_argument("--limit", type=int, default=None)
     rebuild = subparsers.add_parser(
         "rebuild-projection",
         help="Replay active non-sensitive claims into the configured vector collection",
@@ -34,6 +39,9 @@ def main() -> None:
     try:
         if args.command == "process-once":
             print(service.process_outbox())
+            return
+        if args.command == "requeue-failed":
+            print(service.requeue_failed_outbox(args.limit))
             return
         print(service.rebuild_projection(args.batch_size))
     finally:

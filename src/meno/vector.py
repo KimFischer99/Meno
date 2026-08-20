@@ -6,6 +6,7 @@ import random
 import threading
 import time
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any, Protocol
 
 import httpx
@@ -44,6 +45,11 @@ class GoogleEmbedder:
         self.dimension = settings.embedding_dimension
         self.batch_size = settings.google_batch_size
         self.max_retries = settings.google_max_retries
+        self._circuit_threshold = settings.google_circuit_breaker_threshold
+        self._circuit_cooldown = settings.google_circuit_breaker_seconds
+        self._circuit_lock = threading.Lock()
+        self._consecutive_failures = 0
+        self._circuit_open_until = 0.0
         self._client = httpx.Client(
             base_url=settings.google_api_base_url,
             headers={"x-goog-api-key": settings.google_api_key},
@@ -103,11 +109,13 @@ class GoogleEmbedder:
         ]
 
     def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
+        self._circuit_check()
         for attempt in range(self.max_retries + 1):
             try:
                 response = self._client.post(path, json=payload)
             except httpx.HTTPError as exc:
                 if attempt >= self.max_retries:
+                    self._record_failure()
                     raise EmbeddingError("Google embedding API transport failure") from exc
                 self._backoff(attempt)
                 continue
@@ -115,18 +123,42 @@ class GoogleEmbedder:
                 body = response.json()
                 if not isinstance(body, dict):
                     raise EmbeddingError("Google embedding API returned an invalid response")
+                self._record_success()
                 return body
             if response.status_code not in {408, 429, 500, 502, 503, 504}:
                 raise EmbeddingError(
                     f"Google embedding API rejected the request ({response.status_code})"
                 )
             if attempt >= self.max_retries:
+                self._record_failure()
                 raise EmbeddingError(
                     f"Google embedding API remained unavailable ({response.status_code})"
                 )
             retry_after = response.headers.get("retry-after", "")
             self._backoff(attempt, retry_after)
         raise AssertionError("unreachable")
+
+    def _circuit_check(self) -> None:
+        with self._circuit_lock:
+            open_until = self._circuit_open_until
+        if open_until and time.monotonic() < open_until:
+            raise EmbeddingError("Google embedding API circuit breaker is open")
+
+    def _record_success(self) -> None:
+        with self._circuit_lock:
+            self._consecutive_failures = 0
+            self._circuit_open_until = 0.0
+
+    def _record_failure(self) -> None:
+        with self._circuit_lock:
+            self._consecutive_failures += 1
+            if self._consecutive_failures >= self._circuit_threshold:
+                self._circuit_open_until = time.monotonic() + self._circuit_cooldown
+                log.warning(
+                    "Google embedding circuit breaker open for %.1fs after %d failures",
+                    self._circuit_cooldown,
+                    self._consecutive_failures,
+                )
 
     def _backoff(self, attempt: int, retry_after: str = "") -> None:
         try:
@@ -161,14 +193,27 @@ class VectorDocument:
     user_id: str
     status: str
     text: str
+    valid_from: datetime | None = None
+    valid_to: datetime | None = None
 
 
 class VectorStore(Protocol):
-    def upsert(self, claim_id: str, user_id: str, status: str, text: str) -> None: ...
+    def upsert(
+        self,
+        claim_id: str,
+        user_id: str,
+        status: str,
+        text: str,
+        *,
+        valid_from: datetime | None = None,
+        valid_to: datetime | None = None,
+    ) -> None: ...
 
     def upsert_many(self, documents: list[VectorDocument]) -> None: ...
 
-    def search(self, user_id: str, query: str, limit: int) -> list[VectorHit]: ...
+    def search(
+        self, user_id: str, query: str, limit: int, as_of: datetime | None = None
+    ) -> list[VectorHit]: ...
 
     def delete_claim(self, claim_id: str) -> None: ...
 
@@ -179,14 +224,46 @@ class VectorStore(Protocol):
     def close(self) -> None: ...
 
 
+def _aware(value: datetime) -> datetime:
+    return value if value.tzinfo else value.replace(tzinfo=UTC)
+
+
+def _epoch(value: datetime | None) -> float | None:
+    return _aware(value).timestamp() if value is not None else None
+
+
+def _temporally_valid(
+    valid_from: datetime | None, valid_to: datetime | None, as_of: datetime | None
+) -> bool:
+    if as_of is None:
+        return True
+    moment = _aware(as_of)
+    if valid_from is not None and _aware(valid_from) > moment:
+        return False
+    return valid_to is None or _aware(valid_to) > moment
+
+
 class MemoryVectorStore:
     def __init__(self, embedder: Embedder) -> None:
         self.embedder = embedder
-        self._points: dict[str, tuple[str, str, list[float]]] = {}
+        self._points: dict[
+            str, tuple[str, str, list[float], datetime | None, datetime | None]
+        ] = {}
         self._lock = threading.Lock()
 
-    def upsert(self, claim_id: str, user_id: str, status: str, text: str) -> None:
-        self.upsert_many([VectorDocument(claim_id, user_id, status, text)])
+    def upsert(
+        self,
+        claim_id: str,
+        user_id: str,
+        status: str,
+        text: str,
+        *,
+        valid_from: datetime | None = None,
+        valid_to: datetime | None = None,
+    ) -> None:
+        self.upsert_many(
+            [VectorDocument(claim_id, user_id, status, text, valid_from, valid_to)]
+        )
 
     def upsert_many(self, documents: list[VectorDocument]) -> None:
         vectors = self.embedder.embed_documents([document.text for document in documents])
@@ -196,15 +273,21 @@ class MemoryVectorStore:
                     document.user_id,
                     document.status,
                     vector,
+                    document.valid_from,
+                    document.valid_to,
                 )
 
-    def search(self, user_id: str, query: str, limit: int) -> list[VectorHit]:
+    def search(
+        self, user_id: str, query: str, limit: int, as_of: datetime | None = None
+    ) -> list[VectorHit]:
         query_vector = self.embedder.embed_query(query)
         with self._lock:
             candidates = [
                 VectorHit(claim_id, _cosine(query_vector, vector))
-                for claim_id, (owner, status, vector) in self._points.items()
-                if owner == user_id and status == "active"
+                for claim_id, (owner, status, vector, valid_from, valid_to) in self._points.items()
+                if owner == user_id
+                and status == "active"
+                and _temporally_valid(valid_from, valid_to, as_of)
             ]
         return sorted(candidates, key=lambda item: item.score, reverse=True)[:limit]
 
@@ -249,6 +332,16 @@ class QdrantVectorStore:
                 field_name="status",
                 field_schema=models.PayloadSchemaType.KEYWORD,
             )
+            self.client.create_payload_index(
+                collection_name=self.collection,
+                field_name="valid_from_ts",
+                field_schema=models.PayloadSchemaType.FLOAT,
+            )
+            self.client.create_payload_index(
+                collection_name=self.collection,
+                field_name="valid_to_ts",
+                field_schema=models.PayloadSchemaType.FLOAT,
+            )
         else:
             collection = self.client.get_collection(self.collection)
             vectors = collection.config.params.vectors
@@ -259,8 +352,19 @@ class QdrantVectorStore:
                     f"{actual_dimension}, expected {embedder.dimension}"
                 )
 
-    def upsert(self, claim_id: str, user_id: str, status: str, text: str) -> None:
-        self.upsert_many([VectorDocument(claim_id, user_id, status, text)])
+    def upsert(
+        self,
+        claim_id: str,
+        user_id: str,
+        status: str,
+        text: str,
+        *,
+        valid_from: datetime | None = None,
+        valid_to: datetime | None = None,
+    ) -> None:
+        self.upsert_many(
+            [VectorDocument(claim_id, user_id, status, text, valid_from, valid_to)]
+        )
 
     def upsert_many(self, documents: list[VectorDocument]) -> None:
         if not documents:
@@ -274,6 +378,8 @@ class QdrantVectorStore:
                     "user_id": document.user_id,
                     "status": document.status,
                     "projection_version": self.projection_version,
+                    "valid_from_ts": _epoch(document.valid_from),
+                    "valid_to_ts": _epoch(document.valid_to),
                 },
             )
             for document, vector in zip(documents, vectors, strict=True)
@@ -285,20 +391,36 @@ class QdrantVectorStore:
                 points=points[offset : offset + self.upsert_batch_size],
             )
 
-    def search(self, user_id: str, query: str, limit: int) -> list[VectorHit]:
+    def search(
+        self, user_id: str, query: str, limit: int, as_of: datetime | None = None
+    ) -> list[VectorHit]:
+        must: list[models.Condition] = [
+            models.FieldCondition(key="user_id", match=models.MatchValue(value=user_id)),
+            models.FieldCondition(key="status", match=models.MatchValue(value="active")),
+        ]
+        if as_of is not None:
+            as_of_ts = _epoch(as_of)
+            must.append(
+                models.FieldCondition(
+                    key="valid_from_ts", range=models.Range(lte=as_of_ts)
+                )
+            )
+            must.append(
+                models.Filter(
+                    should=[
+                        models.IsNullCondition(
+                            is_null=models.PayloadField(key="valid_to_ts")
+                        ),
+                        models.FieldCondition(
+                            key="valid_to_ts", range=models.Range(gt=as_of_ts)
+                        ),
+                    ]
+                )
+            )
         response = self.client.query_points(
             collection_name=self.collection,
             query=self.embedder.embed_query(query),
-            query_filter=models.Filter(
-                must=[
-                    models.FieldCondition(
-                        key="user_id", match=models.MatchValue(value=user_id)
-                    ),
-                    models.FieldCondition(
-                        key="status", match=models.MatchValue(value="active")
-                    ),
-                ]
-            ),
+            query_filter=models.Filter(must=must),
             limit=limit,
             with_payload=False,
         )

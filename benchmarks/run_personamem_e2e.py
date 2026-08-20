@@ -110,12 +110,6 @@ def parse_args() -> argparse.Namespace:
         default=600,
         help="max seconds to wait for outbox drain after each ingest",
     )
-    parser.add_argument(
-        "--stable-seconds",
-        type=float,
-        default=30,
-        help="revision must be unchanged for this long to count as drained",
-    )
     parser.add_argument("--run-id", default=datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ"))
     parser.add_argument("--retrieval-cache", type=Path, default=None)
     parser.add_argument("--cleanup", action="store_true")
@@ -216,7 +210,6 @@ def _run_retrieval_phase(
 ) -> tuple[list[dict[str, Any]], set[str]]:
     records: list[dict[str, Any]] = []
     progress: dict[str, int] = defaultdict(int)
-    revisions: dict[str, int] = defaultdict(int)
     user_ids: set[str] = set()
     for index, row in enumerate(rows, start=1):
         context_id = row["shared_context_id"]
@@ -253,7 +246,6 @@ def _run_retrieval_phase(
                 }
             )
         newly_accepted = 0
-        last_ingest_revision = revisions[user_id]
         for batch_index, offset in enumerate(range(0, len(ingest_events), args.ingest_batch_size)):
             if batch_index and args.ingest_batch_interval_seconds:
                 time.sleep(args.ingest_batch_interval_seconds)
@@ -266,16 +258,9 @@ def _run_retrieval_phase(
             response.raise_for_status()
             payload = response.json()
             newly_accepted += sum(not event["idempotent_replay"] for event in payload["events"])
-            last_ingest_revision = max(
-                last_ingest_revision,
-                *(event["state_revision"] for event in payload["events"]),
-            )
-        revisions[user_id] = last_ingest_revision
         progress[context_id] = max(progress[context_id], end)
         if newly_accepted:
-            _wait_for_processing(
-                client, user_id, revisions[user_id], args.wait_timeout, args.stable_seconds
-            )
+            _wait_for_processing(client, user_id, args.wait_timeout)
 
         started = time.perf_counter()
         retrieve_attempts = 0
@@ -530,34 +515,20 @@ def _rank_options(options: list[str], facets: list[dict[str, Any]]) -> list[floa
     ]
 
 
-def _wait_for_processing(
-    client: httpx.Client,
-    user_id: str,
-    min_revision: int,
-    timeout: float,
-    stable_seconds: float = 30,
-) -> None:
-    """Wait until the user's revision stops growing (outbox drained).
+def _wait_for_processing(client: httpx.Client, user_id: str, timeout: float) -> None:
+    """Wait until the user's outbox queue reports zero pending rows.
 
-    A fixed ``last_ingest + accepted`` target is wrong under paced ingestion:
-    the background worker bumps the same revision while earlier batches are
-    still being submitted, so the final revision is lower than that target.
-    Revision monotonically increases while the user has pending outbox rows,
-    so "unchanged for stable_seconds and at least min_revision" means drained.
+    Outbox rows are created in the same transaction as the ingest response,
+    so ``pending_outbox == 0`` from the drain endpoint means every accepted
+    event has been processed (or terminally failed) — no stability window.
     """
     deadline = time.monotonic() + timeout
-    last_revision = -1
-    stable_since = time.monotonic()
     while time.monotonic() < deadline:
-        response = client.get(f"/v1/revisions/{user_id}")
+        response = client.get(f"/v1/users/{user_id}/drain")
         response.raise_for_status()
-        revision = response.json()["state_revision"]
-        if revision != last_revision:
-            last_revision = revision
-            stable_since = time.monotonic()
-        elif revision >= min_revision and time.monotonic() - stable_since >= stable_seconds:
+        if response.json()["pending_outbox"] == 0:
             return
-        time.sleep(2)
+        time.sleep(0.5)
     raise TimeoutError(user_id)
 
 

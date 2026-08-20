@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 from fastapi.testclient import TestClient
@@ -175,7 +176,15 @@ def test_batch_ingest_materializes_vectors_in_one_embedding_call(client):
     assert response.status_code == 202, response.text
     assert response.json()["accepted"] == 2
     service = client.app.state.meno
-    assert service.process_outbox() == 2
+    # The background worker may win the race to process the batch; either way
+    # both events must drain and be materialized by a single embedding call.
+    deadline = time.monotonic() + 5
+    while time.monotonic() < deadline:
+        service.process_outbox()
+        if service.drain_status("batch-user")["drained"]:
+            break
+        time.sleep(0.01)
+    assert service.drain_status("batch-user")["drained"]
     assert service.vector_store.embedder.document_batch_sizes[-1] == 2
     assert retrieve(client, "batch-user", "project codename").json()["facets"]
 

@@ -63,5 +63,6 @@ meno rebuild-projection --batch-size 32
 - `POST /v1/deletions` removes canonical and derived user state.
 - `GET /v1/audit/{claim_id}` explains lineage.
 - `GET /v1/revisions/{user_id}` reports current state revision.
+- `GET /v1/users/{user_id}/drain` reports pending/failed outbox counts for drain detection.
 
 All mutating requests require `Idempotency-Key`.
