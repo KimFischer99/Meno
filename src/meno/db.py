@@ -9,12 +9,14 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
     UniqueConstraint,
     create_engine,
     event,
+    text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker
 
@@ -46,6 +48,16 @@ class Event(Base):
 
 class Claim(Base):
     __tablename__ = "meno_claims"
+    __table_args__ = (
+        Index(
+            "uq_claim_active_semantic",
+            "user_id",
+            "semantic_key",
+            unique=True,
+            sqlite_where=text("status = 'active'"),
+            postgresql_where=text("status = 'active'"),
+        ),
+    )
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
     derivation_key: Mapped[str | None] = mapped_column(String(128), unique=True, index=True)
@@ -64,6 +76,9 @@ class Claim(Base):
     valid_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     supersedes_id: Mapped[str | None] = mapped_column(String(64), ForeignKey("meno_claims.id"))
     extractor_version: Mapped[str] = mapped_column(String(128))
+    semantic_key: Mapped[str] = mapped_column(String(71), default="")
+    superseded_by_id: Mapped[str | None] = mapped_column(String(64), ForeignKey("meno_claims.id"))
+    superseded_reason: Mapped[str | None] = mapped_column(String(32))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     evidence: Mapped[list[ClaimEvidence]] = relationship(

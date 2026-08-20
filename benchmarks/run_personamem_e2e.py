@@ -135,15 +135,32 @@ def main() -> None:
     api_token = _read_secret(args.api_token, args.api_token_file)
     llm_api_key = _read_secret(args.llm_api_key, args.llm_api_key_file)
     headers = {"Authorization": f"Bearer {api_token}"} if api_token else {}
+    questions_sha256 = hashlib.sha256(question_raw).hexdigest()
+    contexts_sha256 = hashlib.sha256(context_raw).hexdigest()
 
-    retrieval_records = _load_retrieval_cache(args.retrieval_cache, args.run_id, rows)
     user_ids: set[str] = set()
     with httpx.Client(
         base_url=args.api_url, headers=headers, timeout=args.timeout, trust_env=False
     ) as client:
+        service_versions = _fetch_service_versions(client)
+        retrieval_records = _load_retrieval_cache(
+            args.retrieval_cache,
+            args.run_id,
+            rows,
+            extractor_version=service_versions.get("extractor_version", ""),
+            questions_sha256=questions_sha256,
+            contexts_sha256=contexts_sha256,
+        )
         if retrieval_records is None:
             retrieval_records, user_ids = _run_retrieval_phase(args, client, rows, contexts)
-            _save_retrieval_cache(args.retrieval_cache, args.run_id, retrieval_records)
+            _save_retrieval_cache(
+                args.retrieval_cache,
+                args.run_id,
+                retrieval_records,
+                extractor_version=service_versions.get("extractor_version", ""),
+                questions_sha256=questions_sha256,
+                contexts_sha256=contexts_sha256,
+            )
         elif args.cleanup:
             user_ids = {record["user_id"] for record in retrieval_records}
 
@@ -168,8 +185,8 @@ def main() -> None:
             "LLM answers from Meno retrieved context only; comparable across Meno "
             "revisions, not to the official full-context PersonaMem leaderboard"
         ),
-        "questions_sha256": hashlib.sha256(question_raw).hexdigest(),
-        "contexts_sha256": hashlib.sha256(context_raw).hexdigest(),
+        "questions_sha256": questions_sha256,
+        "contexts_sha256": contexts_sha256,
         "run_id": args.run_id,
         "items": len(results),
         "config": {
@@ -183,6 +200,11 @@ def main() -> None:
             "ingest_batch_interval_seconds": args.ingest_batch_interval_seconds,
             "retrieve_retries": args.retrieve_retries,
             "retrieve_retry_wait_seconds": args.retrieve_retry_wait_seconds,
+            "extractor_version": service_versions.get("extractor_version"),
+            "embedding_projection_version": service_versions.get(
+                "embedding_projection_version"
+            ),
+            "policy_version": service_versions.get("policy_version"),
         },
         "aggregate": _metrics(results),
         "by_question_type": {key: _metrics(value) for key, value in sorted(by_type.items())},
@@ -457,13 +479,36 @@ def _merge(record: dict[str, Any], answer: dict[str, Any]) -> dict[str, Any]:
     return merged
 
 
+def _fetch_service_versions(client: httpx.Client) -> dict[str, Any]:
+    """Bind the report to the running service's version stamps (design 5.2)."""
+    try:
+        response = client.get("/health/ready")
+        response.raise_for_status()
+        return response.json()
+    except httpx.HTTPError:
+        return {}
+
+
 def _load_retrieval_cache(
-    path: Path | None, run_id: str, rows: list[dict[str, str]]
+    path: Path | None,
+    run_id: str,
+    rows: list[dict[str, str]],
+    *,
+    extractor_version: str,
+    questions_sha256: str,
+    contexts_sha256: str,
 ) -> list[dict[str, Any]] | None:
     if path is None or not path.exists():
         return None
     payload = json.loads(path.read_text(encoding="utf-8"))
     if payload.get("run_id") != run_id:
+        return None
+    # Cross-version cache reuse would contaminate A/B extractor comparisons.
+    if payload.get("extractor_version") != extractor_version:
+        return None
+    if payload.get("questions_sha256") != questions_sha256:
+        return None
+    if payload.get("contexts_sha256") != contexts_sha256:
         return None
     expected = [row["question_id"] for row in rows]
     records = payload.get("records", [])
@@ -474,13 +519,29 @@ def _load_retrieval_cache(
 
 
 def _save_retrieval_cache(
-    path: Path | None, run_id: str, records: list[dict[str, Any]]
+    path: Path | None,
+    run_id: str,
+    records: list[dict[str, Any]],
+    *,
+    extractor_version: str,
+    questions_sha256: str,
+    contexts_sha256: str,
 ) -> None:
     if path is None:
         return
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        json.dumps({"run_id": run_id, "records": records}, ensure_ascii=False) + "\n",
+        json.dumps(
+            {
+                "run_id": run_id,
+                "extractor_version": extractor_version,
+                "questions_sha256": questions_sha256,
+                "contexts_sha256": contexts_sha256,
+                "records": records,
+            },
+            ensure_ascii=False,
+        )
+        + "\n",
         encoding="utf-8",
     )
 

@@ -69,7 +69,7 @@ class Settings:
     outbox_retry_max_seconds: float = 300.0
     audit_buffer_max: int = 10_000
     policy_version: str = "meno-policy-1.0.0"
-    extractor_version: str = "meno-extractor-1.0.0"
+    extractor_version: str = "meno-extractor-2.0.0"
     worker_poll_seconds: float = 0.2
     api_host: str = "127.0.0.1"
     api_port: int = 8765
@@ -139,7 +139,7 @@ class Settings:
             audit_buffer_max=int(_env("MENO_AUDIT_BUFFER_MAX", "10000")),
             policy_version=_env("MENO_POLICY_VERSION", "meno-policy-1.0.0"),
             extractor_version=_env(
-                "MENO_EXTRACTOR_VERSION", "meno-extractor-1.0.0"
+                "MENO_EXTRACTOR_VERSION", "meno-extractor-2.0.0"
             ),
             worker_poll_seconds=float(_env("MENO_WORKER_POLL_SECONDS", "0.2")),
             api_host=_env("MENO_API_HOST", "127.0.0.1"),

@@ -1,6 +1,7 @@
 # Claim 版本协调协议设计（阶段二 GATE，任务 5）
 
-> 状态：待 Trism/Anoki 审核。通过前不动任务 6/7 实现代码。
+> 状态：GATE 已通过（Anoki 批准 D1-D5），D1-D5 已落地实现（见 git 历史与
+> `tests/test_stage2.py`）。任务 6/7 亦已完成。
 > 依据：`docs/stage2-task-brief.md` 第 5 项、`tests/code_review.md` #A-4、以及对
 > `src/meno/{db,service,extractor,vector,config,cli,api}.py` 与 `benchmarks/run_personamem_e2e.py` 的实读。
 

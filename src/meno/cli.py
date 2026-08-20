@@ -22,6 +22,21 @@ def main() -> None:
         help="Replay active non-sensitive claims into the configured vector collection",
     )
     rebuild.add_argument("--batch-size", type=int, default=None)
+    subparsers.add_parser(
+        "migrate",
+        help="Apply the claim coordination schema migration (idempotent)",
+    )
+    reprocess = subparsers.add_parser(
+        "reprocess",
+        help="Enqueue replay of existing events under an extractor version",
+    )
+    reprocess.add_argument(
+        "--extractor-version",
+        default=None,
+        help="version to replay under (default: MENO_EXTRACTOR_VERSION)",
+    )
+    reprocess.add_argument("--user-id", default=None)
+    reprocess.add_argument("--limit", type=int, default=None)
     args = parser.parse_args()
     settings = Settings.from_env()
     if args.command == "serve":
@@ -42,6 +57,18 @@ def main() -> None:
             return
         if args.command == "requeue-failed":
             print(service.requeue_failed_outbox(args.limit))
+            return
+        if args.command == "migrate":
+            print(service.migrate())
+            return
+        if args.command == "reprocess":
+            print(
+                service.reprocess(
+                    args.extractor_version or settings.extractor_version,
+                    user_id=args.user_id,
+                    limit=args.limit,
+                )
+            )
             return
         print(service.rebuild_projection(args.batch_size))
     finally:

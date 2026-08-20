@@ -4,13 +4,14 @@ import hashlib
 import json
 import logging
 import math
+import re
 import threading
 import uuid
 from collections import deque
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import delete, func, select, text
+from sqlalchemy import delete, func, select, text, update
 from sqlalchemy.dialects.postgresql import insert as postgresql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import Session, selectinload
@@ -28,7 +29,7 @@ from .db import (
     Outbox,
     UserRevision,
 )
-from .extractor import extract_claims
+from .extractor import ClaimCandidate, extract_claims, preference_slot
 from .schemas import (
     ConsentRequest,
     DeletionRequest,
@@ -68,6 +69,42 @@ def _now() -> datetime:
 
 def _aware(value: datetime) -> datetime:
     return value if value.tzinfo else value.replace(tzinfo=UTC)
+
+
+_NORMALIZE_EDGE_PUNCT = "。.!！?？,，;；:：'\"'\"\"\" "
+
+
+def _normalize_value(value: str) -> str:
+    """Deterministic value normalization for semantic keys (stdlib only)."""
+    folded = re.sub(r"\s+", " ", value.casefold()).strip()
+    return folded.strip(_NORMALIZE_EDGE_PUNCT)
+
+
+def _semantic_key(
+    user_id: str, kind: str, semantic_channel: str, value: str, slot: str | None = None
+) -> str:
+    """Key of the "(user, semantic)" invariant: at most one active claim each.
+
+    Slot-keyed candidates (extractor v2 preferences) collapse onto one key per
+    preference dimension; everything else falls back to the normalized value.
+    """
+    basis = slot if slot else _normalize_value(value)
+    return _sha(f"{user_id}:{kind}:{semantic_channel}:{basis}")
+
+
+# Evidence reinforcement (stage-2 item 7): each extra evidence event both lifts
+# the confidence base and stretches the effective half-life, so re-confirmed
+# preferences decay slower instead of purely aging out.
+EVIDENCE_CONFIDENCE_STEP = 0.04
+EVIDENCE_HALF_LIFE_FACTOR = 0.5
+
+# Claim coordination protocol columns (design doc section 3.1). DDL is valid
+# for both SQLite (constant default, no nullability change) and PostgreSQL.
+_MIGRATION_COLUMNS = (
+    ("semantic_key", "VARCHAR(71) NOT NULL DEFAULT ''"),
+    ("superseded_by_id", "VARCHAR(64) NULL REFERENCES meno_claims(id)"),
+    ("superseded_reason", "VARCHAR(32) NULL"),
+)
 
 
 class MenoService:
@@ -252,10 +289,13 @@ class MenoService:
     def _process_outbox_chunk(self, limit: int) -> int:
         now = _now()
         with self.session_factory() as session:
+            # D2: only rows stamped with the running extractor version are
+            # picked up, so processing code, row version and claim stamp agree.
             rows = session.scalars(
                 select(Outbox)
                 .where(
                     Outbox.status == "pending",
+                    Outbox.processor_version == self.settings.extractor_version,
                     (Outbox.next_attempt_at.is_(None)) | (Outbox.next_attempt_at <= now),
                 )
                 .order_by(Outbox.created_at)
@@ -272,7 +312,7 @@ class MenoService:
                         select(Event).where(Event.id.in_([row.event_id for row in rows]))
                     ).all()
                 }
-                planned: list[tuple[Outbox, Event, str, Any]] = []
+                planned: list[tuple[Outbox, Event, str, ClaimCandidate, str]] = []
                 for row in rows:
                     event = events.get(row.event_id)
                     if event is None:
@@ -281,7 +321,14 @@ class MenoService:
                         derivation_key = _sha(
                             f"{event.id}:{row.processor_version}:{candidate_index}"
                         )
-                        planned.append((row, event, derivation_key, candidate))
+                        semantic_key = _semantic_key(
+                            event.user_id,
+                            candidate.kind,
+                            candidate.semantic_channel,
+                            candidate.value,
+                            candidate.slot,
+                        )
+                        planned.append((row, event, derivation_key, candidate, semantic_key))
 
                 derivation_keys = [item[2] for item in planned]
                 existing = set(
@@ -291,46 +338,62 @@ class MenoService:
                         )
                     ).all()
                 )
+                key_pairs = {
+                    (event.user_id, semantic_key)
+                    for _row, event, _dk, _candidate, semantic_key in planned
+                }
+                active_by_key: dict[tuple[str, str], Claim] = {}
+                if key_pairs:
+                    active_by_key = {
+                        (claim.user_id, claim.semantic_key): claim
+                        for claim in session.scalars(
+                            select(Claim)
+                            .options(selectinload(Claim.evidence))
+                            .where(
+                                Claim.status == "active",
+                                Claim.user_id.in_({user for user, _key in key_pairs}),
+                                Claim.semantic_key.in_({key for _user, key in key_pairs}),
+                            )
+                        ).all()
+                        if (claim.user_id, claim.semantic_key) in key_pairs
+                    }
+
                 documents: list[VectorDocument] = []
-                for _row, event, derivation_key, candidate in planned:
+                produced_keys: dict[str, set[str]] = {}
+                protected_skips: dict[str, list[Claim]] = {}
+                for row, event, derivation_key, candidate, semantic_key in planned:
+                    produced_keys.setdefault(event.id, set()).add(semantic_key)
                     if derivation_key in existing:
                         continue
-                    claim = Claim(
-                        id=_claim_id(derivation_key),
-                        derivation_key=derivation_key,
-                        user_id=event.user_id,
-                        kind=candidate.kind,
-                        origin_role=event.role,
-                        semantic_channel=candidate.semantic_channel,
-                        value=candidate.value,
-                        status="active",
-                        confidence=candidate.confidence,
-                        half_life_days=candidate.half_life_days,
-                        sensitive=candidate.sensitive,
-                        allowed_purposes=event.consent_scope,
-                        source_type=event.source_type,
-                        valid_from=event.occurred_at,
-                        extractor_version=self.settings.extractor_version,
+                    self._coordinate_candidate(
+                        session,
+                        row,
+                        event,
+                        derivation_key,
+                        candidate,
+                        semantic_key,
+                        active_by_key,
+                        documents,
+                        protected_skips,
                     )
-                    session.add(claim)
-                    session.add(
-                        ClaimEvidence(
-                            claim_id=claim.id,
-                            event_id=event.id,
-                            relation="explicit_statement",
-                        )
+
+                session.flush()
+                # Event-level cleanup: withdraw stale-version claims derived
+                # from the reprocessed events once every evidence event has
+                # been processed under the current version.
+                chunk_event_ids = {row.event_id for row in rows}
+                for row in rows:
+                    event = events.get(row.event_id)
+                    if event is None:
+                        continue
+                    self._withdraw_stale_claims(
+                        session,
+                        event,
+                        row.processor_version,
+                        produced_keys.get(event.id, set()),
+                        chunk_event_ids,
+                        active_by_key,
                     )
-                    if not claim.sensitive:
-                        documents.append(
-                            VectorDocument(
-                                claim_id=claim.id,
-                                user_id=claim.user_id,
-                                status=claim.status,
-                                text=claim.value,
-                                valid_from=claim.valid_from,
-                                valid_to=claim.valid_to,
-                            )
-                        )
 
                 session.flush()
                 self.vector_store.upsert_many(documents)
@@ -347,6 +410,7 @@ class MenoService:
                             purpose=None,
                             decision={
                                 "allowed": True,
+                                "extractor_version": row.processor_version,
                                 "embedding_projection_version": (
                                     self.settings.embedding_projection_version
                                 ),
@@ -354,6 +418,24 @@ class MenoService:
                             revision=revision,
                             event_ids=[event.id],
                         )
+                        for skipped in protected_skips.get(event.id, []):
+                            self._audit(
+                                session,
+                                event_name="meno.claim.coordination",
+                                trace_id=_id(),
+                                user_id=event.user_id,
+                                claim_id=skipped.id,
+                                action="derive",
+                                purpose=None,
+                                decision={
+                                    "allowed": False,
+                                    "reason": "explicit_feedback_protected",
+                                    "semantic_key": skipped.semantic_key,
+                                    "extractor_version": row.processor_version,
+                                },
+                                revision=revision,
+                                event_ids=[event.id],
+                            )
                     row.status = "processed"
                     row.processed_at = _now()
                     row.error = None
@@ -364,6 +446,173 @@ class MenoService:
                 session.rollback()
                 self._mark_outbox_failure(row_ids, exc)
                 return 0
+
+    def _coordinate_candidate(
+        self,
+        session: Session,
+        row: Outbox,
+        event: Event,
+        derivation_key: str,
+        candidate: ClaimCandidate,
+        semantic_key: str,
+        active_by_key: dict[tuple[str, str], Claim],
+        documents: list[VectorDocument],
+        protected_skips: dict[str, list[Claim]],
+    ) -> None:
+        """Key-level coordination (design doc section 3.2), in-transaction."""
+        existing_claim = active_by_key.get((event.user_id, semantic_key))
+        if existing_claim is not None and existing_claim.source_type == "explicit_feedback":
+            # D3: human corrections always win over machine extraction.
+            protected_skips.setdefault(event.id, []).append(existing_claim)
+            return
+        if existing_claim is not None:
+            same_value = _normalize_value(existing_claim.value) == _normalize_value(
+                candidate.value
+            )
+            if existing_claim.extractor_version == row.processor_version and same_value:
+                # Same version, key and value: reinforce, do not duplicate.
+                if all(item.event_id != event.id for item in existing_claim.evidence):
+                    existing_claim.evidence.append(
+                        ClaimEvidence(event_id=event.id, relation="explicit_statement")
+                    )
+                    existing_claim.updated_at = _now()
+                return
+            reason = (
+                "version_upgrade"
+                if existing_claim.extractor_version != row.processor_version
+                else "contradiction"
+            )
+            # Deactivate and flush before inserting the successor: the partial
+            # unique index is checked immediately on both dialects.
+            self._supersede_claim(session, existing_claim, reason=reason)
+            session.flush()
+            claim = self._build_claim(
+                session, row, event, derivation_key, candidate, semantic_key, documents
+            )
+            session.flush()
+            existing_claim.superseded_by_id = claim.id
+            claim.supersedes_id = existing_claim.id
+            session.add(
+                ClaimEdge(
+                    id=_id(),
+                    user_id=event.user_id,
+                    source_claim_id=claim.id,
+                    target_claim_id=existing_claim.id,
+                    relation_type="supersedes",
+                    confidence=1.0,
+                )
+            )
+            active_by_key[(event.user_id, semantic_key)] = claim
+            return
+        claim = self._build_claim(
+            session, row, event, derivation_key, candidate, semantic_key, documents
+        )
+        active_by_key[(event.user_id, semantic_key)] = claim
+
+    def _build_claim(
+        self,
+        session: Session,
+        row: Outbox,
+        event: Event,
+        derivation_key: str,
+        candidate: ClaimCandidate,
+        semantic_key: str,
+        documents: list[VectorDocument],
+    ) -> Claim:
+        claim = Claim(
+            id=_claim_id(derivation_key),
+            derivation_key=derivation_key,
+            user_id=event.user_id,
+            kind=candidate.kind,
+            origin_role=event.role,
+            semantic_channel=candidate.semantic_channel,
+            value=candidate.value,
+            status="active",
+            confidence=candidate.confidence,
+            half_life_days=candidate.half_life_days,
+            sensitive=candidate.sensitive,
+            allowed_purposes=event.consent_scope,
+            source_type=event.source_type,
+            valid_from=event.occurred_at,
+            # R1: stamp the row's version, not the running process's default.
+            extractor_version=row.processor_version,
+            semantic_key=semantic_key,
+        )
+        claim.evidence.append(
+            ClaimEvidence(event_id=event.id, relation="explicit_statement")
+        )
+        session.add(claim)
+        if not claim.sensitive:
+            documents.append(
+                VectorDocument(
+                    claim_id=claim.id,
+                    user_id=claim.user_id,
+                    status=claim.status,
+                    text=claim.value,
+                    valid_from=claim.valid_from,
+                    valid_to=claim.valid_to,
+                )
+            )
+        return claim
+
+    def _supersede_claim(
+        self,
+        session: Session,
+        claim: Claim,
+        *,
+        reason: str,
+        superseded_by_id: str | None = None,
+    ) -> None:
+        now = _now()
+        claim.status = "superseded"
+        claim.valid_to = now
+        claim.updated_at = now
+        claim.superseded_by_id = superseded_by_id
+        claim.superseded_reason = reason
+        self.vector_store.delete_claim(claim.id)
+
+    def _withdraw_stale_claims(
+        self,
+        session: Session,
+        event: Event,
+        processor_version: str,
+        produced: set[str],
+        chunk_event_ids: set[str],
+        active_by_key: dict[tuple[str, str], Claim],
+    ) -> None:
+        stale = session.scalars(
+            select(Claim)
+            .join(ClaimEvidence, ClaimEvidence.claim_id == Claim.id)
+            .options(selectinload(Claim.evidence))
+            .where(
+                ClaimEvidence.event_id == event.id,
+                Claim.status == "active",
+                Claim.extractor_version != processor_version,
+            )
+        ).all()
+        for claim in stale:
+            if claim.source_type == "explicit_feedback":
+                continue  # D3: never auto-withdraw human corrections
+            if claim.semantic_key in produced:
+                continue
+            evidence_event_ids = {item.event_id for item in claim.evidence}
+            pending = evidence_event_ids - chunk_event_ids
+            if pending:
+                processed = set(
+                    session.scalars(
+                        select(Outbox.event_id).where(
+                            Outbox.event_id.in_(pending),
+                            Outbox.processor_version == processor_version,
+                            Outbox.status == "processed",
+                        )
+                    ).all()
+                )
+                if not evidence_event_ids <= (processed | chunk_event_ids):
+                    # Some evidence events have not been reprocessed under this
+                    # version yet; the claim still stands (design doc R5).
+                    continue
+            self._supersede_claim(session, claim, reason="extractor_withdrawn")
+            active_by_key.pop((claim.user_id, claim.semantic_key), None)
 
     def _mark_outbox_failure(self, row_ids: list[str], exc: Exception) -> None:
         with self.session_factory.begin() as failure_session:
@@ -419,6 +668,192 @@ class MenoService:
             "drained": counts["pending"] == 0,
             "policy_version": self.settings.policy_version,
         }
+
+    def reprocess(
+        self,
+        extractor_version: str,
+        user_id: str | None = None,
+        limit: int | None = None,
+    ) -> dict[str, Any]:
+        """Enqueue replay of existing events under a new extractor version.
+
+        Idempotent: (event_id, processor_version) is unique and re-runs insert
+        nothing; other-version pending rows for the target events are cancelled
+        so a stale worker can never mislabel them (design doc section 2.1).
+        """
+        if not extractor_version:
+            raise ValueError("extractor_version is required")
+        with self.session_factory.begin() as session:
+            statement = select(Event.id).order_by(Event.created_at)
+            if user_id is not None:
+                statement = statement.where(Event.user_id == user_id)
+            if limit is not None:
+                statement = statement.limit(limit)
+            event_ids = session.scalars(statement).all()
+            if not event_ids:
+                return {
+                    "extractor_version": extractor_version,
+                    "targeted": 0,
+                    "inserted": 0,
+                    "cancelled": 0,
+                }
+            values = [
+                {"id": _id(), "event_id": event_id, "processor_version": extractor_version}
+                for event_id in event_ids
+            ]
+            dialect = session.get_bind().dialect.name
+            if dialect == "postgresql":
+                result = session.execute(
+                    postgresql_insert(Outbox)
+                    .values(values)
+                    .on_conflict_do_nothing(
+                        index_elements=["event_id", "processor_version"]
+                    )
+                )
+                inserted = result.rowcount
+            elif dialect == "sqlite":
+                result = session.execute(
+                    sqlite_insert(Outbox)
+                    .values(values)
+                    .on_conflict_do_nothing(
+                        index_elements=["event_id", "processor_version"]
+                    )
+                )
+                inserted = result.rowcount
+            else:
+                present = set(
+                    session.scalars(
+                        select(Outbox.event_id).where(
+                            Outbox.event_id.in_(event_ids),
+                            Outbox.processor_version == extractor_version,
+                        )
+                    ).all()
+                )
+                inserted = 0
+                for value in values:
+                    if value["event_id"] not in present:
+                        session.add(Outbox(**value))
+                        inserted += 1
+            cancelled = session.execute(
+                update(Outbox)
+                .where(
+                    Outbox.event_id.in_(event_ids),
+                    Outbox.processor_version != extractor_version,
+                    Outbox.status == "pending",
+                )
+                .values(status="cancelled")
+            ).rowcount
+        return {
+            "extractor_version": extractor_version,
+            "targeted": len(event_ids),
+            "inserted": int(inserted),
+            "cancelled": int(cancelled),
+        }
+
+    def migrate(self, batch_size: int = 500) -> dict[str, Any]:
+        """Idempotent schema migration for the claim coordination protocol.
+
+        Steps (design doc section 4.1): add the three columns, backfill
+        semantic_key, dedupe existing active claims per (user, semantic_key),
+        then create the partial unique index. Every step is re-runnable.
+        """
+        if not 1 <= batch_size <= 10_000:
+            raise ValueError("migration batch size must be between 1 and 10000")
+        bind = self.engine if self.engine is not None else self.session_factory.kw["bind"]
+        dialect = bind.dialect.name
+        report: dict[str, Any] = {
+            "columns_added": [],
+            "backfilled": 0,
+            "deduplicated": 0,
+            "index_created": False,
+        }
+        with bind.begin() as connection:
+            existing = self._existing_columns(connection, dialect)
+            for name, ddl in _MIGRATION_COLUMNS:
+                if name in existing:
+                    continue
+                connection.execute(
+                    text(f"ALTER TABLE meno_claims ADD COLUMN {name} {ddl}")
+                )
+                report["columns_added"].append(name)
+
+        while True:
+            with self.session_factory.begin() as session:
+                claims = session.scalars(
+                    select(Claim).where(Claim.semantic_key == "").limit(batch_size)
+                ).all()
+                if not claims:
+                    break
+                for claim in claims:
+                    claim.semantic_key = _semantic_key(
+                        claim.user_id, claim.kind, claim.semantic_channel, claim.value
+                    )
+                report["backfilled"] += len(claims)
+
+        report["deduplicated"] = self._dedupe_active_claims()
+
+        with bind.begin() as connection:
+            connection.execute(
+                text(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS uq_claim_active_semantic "
+                    "ON meno_claims (user_id, semantic_key) WHERE status = 'active'"
+                )
+            )
+        report["index_created"] = True
+        return report
+
+    @staticmethod
+    def _existing_columns(connection, dialect: str) -> set[str]:
+        if dialect == "sqlite":
+            rows = connection.execute(text("PRAGMA table_info(meno_claims)")).all()
+            return {row[1] for row in rows}
+        rows = connection.execute(
+            text(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_name = 'meno_claims'"
+            )
+        ).all()
+        return {row[0] for row in rows}
+
+    def _dedupe_active_claims(self) -> int:
+        deduplicated = 0
+        with self.session_factory.begin() as session:
+            duplicates = session.execute(
+                select(Claim.user_id, Claim.semantic_key)
+                .where(Claim.status == "active", Claim.semantic_key != "")
+                .group_by(Claim.user_id, Claim.semantic_key)
+                .having(func.count() > 1)
+            ).all()
+            for user_id, semantic_key in duplicates:
+                claims = session.scalars(
+                    select(Claim)
+                    .where(
+                        Claim.user_id == user_id,
+                        Claim.semantic_key == semantic_key,
+                        Claim.status == "active",
+                    )
+                    .order_by(Claim.valid_from.desc(), Claim.id.desc())
+                ).all()
+                keeper, *stale = claims
+                for claim in stale:
+                    self._supersede_claim(
+                        session,
+                        claim,
+                        reason="version_upgrade",
+                        superseded_by_id=keeper.id,
+                    )
+                    session.add(
+                        ClaimEdge(
+                            id=_id(),
+                            user_id=user_id,
+                            source_claim_id=keeper.id,
+                            target_claim_id=claim.id,
+                            relation_type="supersedes",
+                            confidence=1.0,
+                        )
+                    )
+                    deduplicated += 1
+        return deduplicated
 
     def retrieve(self, request: RetrieveRequest) -> RetrieveResponse:
         trace_id = _id()
@@ -533,6 +968,21 @@ class MenoService:
             claim = session.get(Claim, request.claim_id)
             if claim is None or claim.user_id != request.user_id:
                 raise LookupError("claim not found")
+            if request.action == "correct" and claim.status != "active":
+                # D5 (review #B-8): correcting an already-corrected claim
+                # replays idempotently instead of creating a duplicate.
+                if claim.status == "superseded" and claim.superseded_by_id is not None:
+                    prior = session.get(Claim, claim.superseded_by_id)
+                    if prior is not None and prior.source_type == "explicit_feedback":
+                        return {
+                            "trace_id": trace_id,
+                            "state_revision": self._revision(session, request.user_id),
+                            "claim_id": prior.id,
+                            "superseded_claim_id": claim.id,
+                            "idempotent_replay": True,
+                            "policy_version": self.settings.policy_version,
+                        }
+                raise ValueError(f"cannot correct a claim in status {claim.status!r}")
             session.add(
                 Feedback(
                     id=_id(),
@@ -559,10 +1009,34 @@ class MenoService:
                 claim.updated_at = _now()
                 self.vector_store.delete_claim(claim.id)
             else:
+                correction = request.correction or ""
+                replacement_key = _semantic_key(
+                    claim.user_id,
+                    claim.kind,
+                    claim.semantic_channel,
+                    correction,
+                    preference_slot(correction),
+                )
                 claim.status = "superseded"
                 claim.valid_to = _now()
                 claim.updated_at = _now()
+                claim.superseded_reason = "feedback_correct"
                 self.vector_store.delete_claim(claim.id)
+                session.flush()
+                # A machine claim holding the same key yields to the human
+                # correction (D3 applies in both directions).
+                conflicts = session.scalars(
+                    select(Claim).where(
+                        Claim.user_id == claim.user_id,
+                        Claim.semantic_key == replacement_key,
+                        Claim.status == "active",
+                        Claim.id != claim.id,
+                    )
+                ).all()
+                for conflict in conflicts:
+                    self._supersede_claim(session, conflict, reason="feedback_correct")
+                if conflicts:
+                    session.flush()
                 feedback_event = Event(
                     id=_id(),
                     user_id=claim.user_id,
@@ -571,8 +1045,8 @@ class MenoService:
                     source_profile=None,
                     session_id=None,
                     role="user",
-                    content=request.correction or "",
-                    content_hash=_sha(request.correction or ""),
+                    content=correction,
+                    content_hash=_sha(correction),
                     consent_scope=claim.allowed_purposes,
                     event_metadata={"feedback_action": "correct", "claim_id": claim.id},
                 )
@@ -584,7 +1058,7 @@ class MenoService:
                     kind=claim.kind,
                     origin_role="user",
                     semantic_channel=claim.semantic_channel,
-                    value=request.correction or "",
+                    value=correction,
                     status="active",
                     confidence=0.99,
                     half_life_days=claim.half_life_days,
@@ -594,10 +1068,14 @@ class MenoService:
                     valid_from=_now(),
                     supersedes_id=claim.id,
                     extractor_version="explicit-feedback-v1",
+                    semantic_key=replacement_key,
                 )
                 session.add(replacement)
                 session.flush()
                 new_claim_id = replacement.id
+                claim.superseded_by_id = replacement.id
+                for conflict in conflicts:
+                    conflict.superseded_by_id = replacement.id
                 session.add(
                     ClaimEvidence(
                         claim_id=replacement.id,
@@ -760,7 +1238,10 @@ class MenoService:
                     "valid_from": claim.valid_from,
                     "valid_to": claim.valid_to,
                     "supersedes": claim.supersedes_id,
+                    "superseded_by": claim.superseded_by_id,
+                    "superseded_reason": claim.superseded_reason,
                 },
+                "semantic_key": claim.semantic_key,
                 "evidence": [
                     {
                         "event_id": event.id,
@@ -834,6 +1315,7 @@ class MenoService:
             "vector": "ok" if vector_ok else "unavailable",
             "environment": self.settings.environment,
             "policy_version": self.settings.policy_version,
+            "extractor_version": self.settings.extractor_version,
             "embedding_provider": self.settings.embedding_provider,
             "embedding_model": self.settings.embedding_model,
             "embedding_projection_version": self.settings.embedding_projection_version,
@@ -907,9 +1389,16 @@ class MenoService:
     def _effective_confidence(self, claim: Claim, as_of: datetime | None = None) -> float:
         if not claim.half_life_days:
             return claim.confidence
+        # Evidence reinforcement: re-confirmed preferences (same semantic key,
+        # multiple evidence events) get a higher base and a longer effective
+        # half-life instead of purely decaying with age.
+        evidence_count = max(1, len(claim.evidence))
+        reinforcement = math.log2(evidence_count)
+        base = min(0.99, claim.confidence + EVIDENCE_CONFIDENCE_STEP * reinforcement)
+        half_life = claim.half_life_days * (1.0 + EVIDENCE_HALF_LIFE_FACTOR * reinforcement)
         effective_at = as_of or _now()
         age_days = max(0.0, (effective_at - _aware(claim.valid_from)).total_seconds() / 86400)
-        return max(0.0, min(1.0, claim.confidence * math.exp(-math.log(2) * age_days / claim.half_life_days)))
+        return max(0.0, min(1.0, base * math.exp(-math.log(2) * age_days / half_life)))
 
     def _score(
         self, semantic: float, confidence: float, claim: Claim, as_of: datetime
