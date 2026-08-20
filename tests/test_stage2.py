@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import ast
+import os
 import sys
+import uuid
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -288,6 +290,39 @@ def test_reprocess_enqueues_cancels_and_is_idempotent(tmp_path):
         ingest_event(service, "e3", "I prefer jazz", user_id="user-b")
         report = service.reprocess(V3, user_id="user-b")
         assert report["targeted"] == 1
+    finally:
+        service.close()
+
+
+def test_reprocess_reports_real_inserted_count_on_postgresql():
+    pg_url = os.environ.get("MENO_TEST_PG_URL")
+    if not pg_url:
+        pytest.skip("MENO_TEST_PG_URL not set")
+    # Unique user/event scope keeps the test isolated on a shared database.
+    suffix = uuid.uuid4().hex[:12]
+    user_id = f"pg-user-{suffix}"
+    settings = Settings(
+        database_url=pg_url,
+        vector_mode="memory",
+        embedding_dimension=256,
+    )
+    service = build_service(settings, embedder=TestEmbedder(256))
+    try:
+        ingest_event(service, f"e1-{suffix}", "I prefer tea", user_id=user_id)
+        ingest_event(service, f"e2-{suffix}", "I prefer coffee", user_id=user_id)
+        service.process_outbox()
+
+        # Multi-row INSERT ... ON CONFLICT DO NOTHING reports rowcount -1 on
+        # PostgreSQL; the report must show the real inserted count instead.
+        report = service.reprocess(V3, user_id=user_id)
+        assert report == {
+            "extractor_version": V3,
+            "targeted": 2,
+            "inserted": 2,
+            "cancelled": 0,
+        }
+        # Idempotent re-run inserts nothing.
+        assert service.reprocess(V3, user_id=user_id)["inserted"] == 0
     finally:
         service.close()
 

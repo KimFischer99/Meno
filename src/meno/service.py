@@ -703,14 +703,18 @@ class MenoService:
             ]
             dialect = session.get_bind().dialect.name
             if dialect == "postgresql":
+                # rowcount is -1 for a multi-row VALUES insert on PostgreSQL, so
+                # count the RETURNING rows instead: ON CONFLICT DO NOTHING only
+                # returns rows that were actually inserted.
                 result = session.execute(
                     postgresql_insert(Outbox)
                     .values(values)
                     .on_conflict_do_nothing(
                         index_elements=["event_id", "processor_version"]
                     )
+                    .returning(Outbox.event_id)
                 )
-                inserted = result.rowcount
+                inserted = len(result.all())
             elif dialect == "sqlite":
                 result = session.execute(
                     sqlite_insert(Outbox)
