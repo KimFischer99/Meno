@@ -1,0 +1,70 @@
+{
+  "diagnostic": "Meno layered retrieval injection budget",
+  "schema_version": "layered-retrieval-diagnostic-v1",
+  "evidence_grade": "deterministic_component_diagnostic",
+  "answer_model_calls": 0,
+  "embedding_provider_calls": 0,
+  "calibration_reference": {
+    "artifact": "artifacts/benchmarks/results/vps-phaseb-baseline-retrieval-cache-formal-hy3.json",
+    "episodic_mean_value_chars": 263.3,
+    "preference_mean_value_chars": 87.5,
+    "episodic_share_of_injected": 0.768,
+    "facets_selected_per_question": 12.0,
+    "facets_rendered_per_question": 10.0
+  },
+  "constraints": {
+    "max_facets": 12,
+    "max_rendered_tokens": 800,
+    "episodic_per_question": 14,
+    "preference_slots": 7
+  },
+  "baseline": {
+    "questions": 40,
+    "facets_selected": 480,
+    "facets_rendered": 440,
+    "facets_dropped_by_render": 40,
+    "render_drop_rate": 0.08333333333333333,
+    "questions_with_dropped_facets": 40,
+    "selected_kind_totals": {
+      "episodic": 439,
+      "preference": 41
+    },
+    "rendered_kind_totals": {
+      "episodic": 400,
+      "preference": 40
+    },
+    "state_layer_share_rendered": 0.09090909090909091,
+    "mean_state_facets_rendered_per_question": 1.0,
+    "mean_value_length": {
+      "episodic": 267.27107061503415,
+      "preference": 26.195121951219512
+    }
+  },
+  "layered": {
+    "questions": 40,
+    "facets_selected": 480,
+    "facets_rendered": 480,
+    "facets_dropped_by_render": 0,
+    "render_drop_rate": 0.0,
+    "questions_with_dropped_facets": 0,
+    "selected_kind_totals": {
+      "episodic": 240,
+      "preference": 240
+    },
+    "rendered_kind_totals": {
+      "episodic": 240,
+      "preference": 240
+    },
+    "state_layer_share_rendered": 0.5,
+    "mean_state_facets_rendered_per_question": 6.0,
+    "mean_value_length": {
+      "episodic": 264.96666666666664,
+      "preference": 31.333333333333332
+    }
+  },
+  "delta": {
+    "render_drop_rate": -0.08333333333333333,
+    "state_layer_share_rendered": 0.40909090909090906,
+    "mean_state_facets_rendered_per_question": 5.0
+  }
+}

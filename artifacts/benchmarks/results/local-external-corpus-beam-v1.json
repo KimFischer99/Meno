@@ -1,0 +1,1107 @@
+{
+  "check": "Meno external corpus contract validation",
+  "schema_version": "external-corpus-validation-v1",
+  "requirements_document": "MENO_DATA_REQUIREMENTS.md",
+  "mode": "sample",
+  "answer_model_calls": 0,
+  "provenance": {
+    "sessions_file": "sessions.jsonl",
+    "sessions_sha256": "184642b5b30ce91c02855d0df9418b82e68d2b111121cb58db4fb39eb05a8196",
+    "queries_file": "queries.jsonl",
+    "queries_sha256": "44d498297ad6263744687427a6772821a1e02e9d502e477b51587b961c2b8ede"
+  },
+  "structure": {
+    "sessions": {
+      "sessions": 20,
+      "users": 20,
+      "messages": 5732,
+      "role_counts": {
+        "assistant": 2866,
+        "user": 2866
+      },
+      "messages_missing_occurred_at": 0,
+      "sessions_with_one_timestamp": 0
+    },
+    "queries": {
+      "queries_accepted": 375,
+      "decisions": {
+        "abstain": 40,
+        "inject": 335
+      },
+      "abstain_share": 0.10666666666666667,
+      "causality_violations": 0,
+      "inject_without_relevant": 0,
+      "abstain_with_relevant": 0
+    },
+    "errors": [],
+    "error_count": 0,
+    "passed": true
+  },
+  "volume": {
+    "requirements": {
+      "minimum_queries": 139,
+      "abstain_share_range": [
+        0.2,
+        0.4
+      ],
+      "minimum_sessions": 30,
+      "minimum_users": 10
+    },
+    "conditions": {
+      "minimum_queries": true,
+      "abstain_share_in_range": false,
+      "minimum_sessions": false,
+      "minimum_users": true
+    },
+    "passed": false,
+    "shortfalls": [
+      "abstain_share_in_range",
+      "minimum_sessions"
+    ],
+    "rationale": "139 queries separates Recall@10 0.9 from 0.85 at 95% confidence. An abstain share in range is what makes this a negative benchmark rather than a recall-only test SPEC warns against."
+  },
+  "query_signal": {
+    "scored_queries": 172,
+    "query_signal": 0.0410437430786268,
+    "median_query_signal": 0.0,
+    "queries_with_zero_signal": 161,
+    "zero_signal_share": 0.936046511627907,
+    "personamem_reference": 0.087,
+    "stop_below": 0.15,
+    "promising_above": 0.35,
+    "band": "STOP_DO_NOT_ANNOTATE",
+    "interpretation": "Mean 0.0410 vs 0.087 on the corpus that proved unusable. Below 0.15 the deciding evidence is not reachable from the query and no labeling scheme rescues it.",
+    "per_query": [
+      {
+        "query_id": "1:contradiction_resolution:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "1:contradiction_resolution:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "1:event_ordering:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "1:event_ordering:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "1:information_extraction:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "1:information_extraction:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "1:instruction_following:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "1:knowledge_update:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "1:knowledge_update:1",
+        "query_signal": 0.14285714285714285
+      },
+      {
+        "query_id": "1:multi_session_reasoning:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "1:multi_session_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "1:preference_following:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "1:preference_following:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "1:summarization:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "1:summarization:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "1:temporal_reasoning:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "1:temporal_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "2:contradiction_resolution:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "2:event_ordering:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "2:event_ordering:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "2:multi_session_reasoning:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "2:multi_session_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "2:preference_following:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "2:preference_following:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "2:summarization:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "2:summarization:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "2:temporal_reasoning:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "2:temporal_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "3:contradiction_resolution:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "3:event_ordering:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "3:event_ordering:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "3:knowledge_update:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "3:knowledge_update:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "3:multi_session_reasoning:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "3:multi_session_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "3:preference_following:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "3:preference_following:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "3:summarization:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "3:summarization:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "3:temporal_reasoning:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "3:temporal_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "4:contradiction_resolution:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "4:event_ordering:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "4:knowledge_update:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "4:knowledge_update:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "4:multi_session_reasoning:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "4:multi_session_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "4:summarization:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "4:temporal_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "5:contradiction_resolution:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "5:event_ordering:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "5:event_ordering:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "5:information_extraction:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "5:information_extraction:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "5:knowledge_update:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "5:knowledge_update:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "5:multi_session_reasoning:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "5:summarization:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "5:temporal_reasoning:1",
+        "query_signal": 0.25
+      },
+      {
+        "query_id": "6:event_ordering:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "6:information_extraction:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "6:knowledge_update:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "6:preference_following:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "6:temporal_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "7:contradiction_resolution:0",
+        "query_signal": 1.0
+      },
+      {
+        "query_id": "7:event_ordering:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "7:event_ordering:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "7:information_extraction:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "7:information_extraction:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "7:knowledge_update:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "7:multi_session_reasoning:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "7:multi_session_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "7:summarization:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "7:summarization:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "8:contradiction_resolution:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "8:contradiction_resolution:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "8:event_ordering:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "8:event_ordering:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "8:information_extraction:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "8:information_extraction:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "8:multi_session_reasoning:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "8:multi_session_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "8:summarization:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "8:summarization:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "9:contradiction_resolution:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "9:contradiction_resolution:1",
+        "query_signal": 1.0
+      },
+      {
+        "query_id": "9:event_ordering:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "9:event_ordering:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "9:multi_session_reasoning:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "9:preference_following:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "9:summarization:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "9:temporal_reasoning:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "10:contradiction_resolution:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "10:event_ordering:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "10:multi_session_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "10:preference_following:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "10:summarization:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "10:temporal_reasoning:0",
+        "query_signal": 1.0
+      },
+      {
+        "query_id": "10:temporal_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "11:contradiction_resolution:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "11:event_ordering:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "11:information_extraction:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "11:knowledge_update:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "11:knowledge_update:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "11:multi_session_reasoning:1",
+        "query_signal": 0.5
+      },
+      {
+        "query_id": "11:summarization:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "11:temporal_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "12:contradiction_resolution:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "12:contradiction_resolution:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "12:event_ordering:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "12:event_ordering:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "12:knowledge_update:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "12:multi_session_reasoning:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "12:multi_session_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "12:summarization:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "12:temporal_reasoning:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "12:temporal_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "13:contradiction_resolution:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "13:event_ordering:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "13:information_extraction:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "13:information_extraction:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "13:multi_session_reasoning:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "13:multi_session_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "14:contradiction_resolution:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "14:contradiction_resolution:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "14:event_ordering:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "14:event_ordering:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "14:information_extraction:1",
+        "query_signal": 1.0
+      },
+      {
+        "query_id": "14:knowledge_update:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "14:multi_session_reasoning:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "14:summarization:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "14:summarization:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "14:temporal_reasoning:0",
+        "query_signal": 0.3333333333333333
+      },
+      {
+        "query_id": "14:temporal_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "15:contradiction_resolution:0",
+        "query_signal": 0.16666666666666666
+      },
+      {
+        "query_id": "15:event_ordering:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "15:knowledge_update:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "15:multi_session_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "16:contradiction_resolution:1",
+        "query_signal": 1.0
+      },
+      {
+        "query_id": "16:event_ordering:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "16:event_ordering:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "16:multi_session_reasoning:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "16:multi_session_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "16:preference_following:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "16:temporal_reasoning:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "16:temporal_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "17:contradiction_resolution:1",
+        "query_signal": 0.6666666666666666
+      },
+      {
+        "query_id": "17:event_ordering:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "17:event_ordering:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "17:information_extraction:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "17:multi_session_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "17:summarization:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "17:temporal_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "18:event_ordering:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "18:multi_session_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "18:preference_following:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "18:temporal_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "19:contradiction_resolution:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "19:event_ordering:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "19:event_ordering:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "19:information_extraction:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "19:information_extraction:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "19:multi_session_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "19:preference_following:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "19:temporal_reasoning:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "20:contradiction_resolution:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "20:event_ordering:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "20:event_ordering:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "20:instruction_following:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "20:multi_session_reasoning:1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "20:preference_following:0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "20:temporal_reasoning:0",
+        "query_signal": 0.0
+      }
+    ]
+  },
+  "privacy_scan": {
+    "patterns_matched": {
+      "email": 64,
+      "slack_token": 1
+    },
+    "total_matches": 65,
+    "locations": [
+      {
+        "session_id": "1",
+        "index": 19,
+        "pattern": "email"
+      },
+      {
+        "session_id": "1",
+        "index": 71,
+        "pattern": "email"
+      },
+      {
+        "session_id": "1",
+        "index": 148,
+        "pattern": "email"
+      },
+      {
+        "session_id": "1",
+        "index": 153,
+        "pattern": "email"
+      },
+      {
+        "session_id": "2",
+        "index": 152,
+        "pattern": "slack_token"
+      },
+      {
+        "session_id": "3",
+        "index": 5,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 6,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 7,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 8,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 9,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 10,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 11,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 17,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 19,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 21,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 25,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 36,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 37,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 57,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 73,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 75,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 79,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 81,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 83,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 85,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 86,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 87,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 89,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 101,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 102,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 103,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 105,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 106,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 107,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 109,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 111,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 141,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 142,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 143,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 145,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 147,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 149,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 154,
+        "pattern": "email"
+      },
+      {
+        "session_id": "3",
+        "index": 155,
+        "pattern": "email"
+      },
+      {
+        "session_id": "6",
+        "index": 3,
+        "pattern": "email"
+      },
+      {
+        "session_id": "6",
+        "index": 7,
+        "pattern": "email"
+      },
+      {
+        "session_id": "6",
+        "index": 9,
+        "pattern": "email"
+      },
+      {
+        "session_id": "6",
+        "index": 11,
+        "pattern": "email"
+      },
+      {
+        "session_id": "6",
+        "index": 13,
+        "pattern": "email"
+      },
+      {
+        "session_id": "6",
+        "index": 19,
+        "pattern": "email"
+      },
+      {
+        "session_id": "6",
+        "index": 23,
+        "pattern": "email"
+      },
+      {
+        "session_id": "6",
+        "index": 25,
+        "pattern": "email"
+      },
+      {
+        "session_id": "6",
+        "index": 43,
+        "pattern": "email"
+      },
+      {
+        "session_id": "6",
+        "index": 49,
+        "pattern": "email"
+      },
+      {
+        "session_id": "6",
+        "index": 97,
+        "pattern": "email"
+      },
+      {
+        "session_id": "6",
+        "index": 99,
+        "pattern": "email"
+      },
+      {
+        "session_id": "8",
+        "index": 183,
+        "pattern": "email"
+      },
+      {
+        "session_id": "11",
+        "index": 189,
+        "pattern": "email"
+      },
+      {
+        "session_id": "11",
+        "index": 191,
+        "pattern": "email"
+      },
+      {
+        "session_id": "18",
+        "index": 17,
+        "pattern": "email"
+      },
+      {
+        "session_id": "19",
+        "index": 65,
+        "pattern": "email"
+      },
+      {
+        "session_id": "19",
+        "index": 93,
+        "pattern": "email"
+      },
+      {
+        "session_id": "19",
+        "index": 95,
+        "pattern": "email"
+      },
+      {
+        "session_id": "19",
+        "index": 99,
+        "pattern": "email"
+      },
+      {
+        "session_id": "20",
+        "index": 59,
+        "pattern": "email"
+      }
+    ],
+    "clean": false,
+    "caveat": "A backstop, not a compliance guarantee. It cannot detect paraphrased personal information, sensitive topics, or identifiers it has no pattern for. The operator's own review is what protects the data."
+  },
+  "verdict": {
+    "contract_satisfied": true,
+    "annotation_recommendation": "STOP_DO_NOT_ANNOTATE",
+    "next_step": "Do not annotate this corpus. Re-sample toward queries that name what they ask about (MENO_DATA_REQUIREMENTS.md §1.7), then re-run."
+  },
+  "scope": "Validates the export contract and predicts annotation viability. It does not score Recall@10 or nDCG@10, and passing it does not move Gate Charter #13/#14 -- those need the annotated set itself."
+}

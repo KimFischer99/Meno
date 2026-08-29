@@ -1,0 +1,357 @@
+{
+  "schema_version": "preference-polarity-oracle-v1",
+  "description": "Deterministic preference-polarity oracle. Each case states user utterances and the stance the canonical store must hold afterwards. Scored on stance correctness per dimension, not on option token overlap, so it isolates whether preference direction and evolution survive extraction and supersede. The narrative family uses verbatim phrasing sampled from the PersonaMem corpus: an earlier revision of this fixture only covered explicit forms the implementation already handled, and passed 12/12 while real-data negation coverage was 26/1143.",
+  "evidence_grade": "deterministic_component_oracle",
+  "cases": [
+    {
+      "case_id": "affirm-simple",
+      "family": "affirmation",
+      "user_id": "pol-affirm-simple",
+      "events": [
+        {
+          "event_id": "pol-affirm-simple-1",
+          "text": "I prefer dark roast coffee"
+        }
+      ],
+      "expected_active": [
+        {
+          "value": "dark roast coffee",
+          "stance": "positive"
+        }
+      ],
+      "expected_superseded": []
+    },
+    {
+      "case_id": "negate-no-longer",
+      "family": "negation",
+      "user_id": "pol-negate-no-longer",
+      "events": [
+        {
+          "event_id": "pol-negate-no-longer-1",
+          "text": "I no longer like tea"
+        }
+      ],
+      "expected_active": [
+        {
+          "value": "tea",
+          "stance": "negative"
+        }
+      ],
+      "expected_superseded": []
+    },
+    {
+      "case_id": "negate-dislike",
+      "family": "negation",
+      "user_id": "pol-negate-dislike",
+      "events": [
+        {
+          "event_id": "pol-negate-dislike-1",
+          "text": "I dislike structured book clubs"
+        }
+      ],
+      "expected_active": [
+        {
+          "value": "structured book clubs",
+          "stance": "negative"
+        }
+      ],
+      "expected_superseded": []
+    },
+    {
+      "case_id": "negate-stopped",
+      "family": "negation",
+      "user_id": "pol-negate-stopped",
+      "events": [
+        {
+          "event_id": "pol-negate-stopped-1",
+          "text": "I stopped liking financial workshops"
+        }
+      ],
+      "expected_active": [
+        {
+          "value": "financial workshops",
+          "stance": "negative"
+        }
+      ],
+      "expected_superseded": []
+    },
+    {
+      "case_id": "reversal-across-turns",
+      "family": "reversal",
+      "user_id": "pol-reversal-turns",
+      "events": [
+        {
+          "event_id": "pol-reversal-turns-1",
+          "text": "I prefer tea"
+        },
+        {
+          "event_id": "pol-reversal-turns-2",
+          "text": "I no longer like tea"
+        }
+      ],
+      "expected_active": [
+        {
+          "value": "tea",
+          "stance": "negative"
+        }
+      ],
+      "expected_superseded": [
+        {
+          "value": "tea",
+          "stance": "positive",
+          "superseded_reason": "contradiction"
+        }
+      ]
+    },
+    {
+      "case_id": "reversal-anymore-adverb",
+      "family": "reversal",
+      "user_id": "pol-reversal-anymore",
+      "events": [
+        {
+          "event_id": "pol-reversal-anymore-1",
+          "text": "I prefer tea"
+        },
+        {
+          "event_id": "pol-reversal-anymore-2",
+          "text": "I do not like tea anymore"
+        }
+      ],
+      "expected_active": [
+        {
+          "value": "tea",
+          "stance": "negative"
+        }
+      ],
+      "expected_superseded": [
+        {
+          "value": "tea",
+          "stance": "positive",
+          "superseded_reason": "contradiction"
+        }
+      ]
+    },
+    {
+      "case_id": "transition-used-to",
+      "family": "transition",
+      "user_id": "pol-transition-usedto",
+      "events": [
+        {
+          "event_id": "pol-transition-usedto-1",
+          "text": "I used to enjoy book clubs but now I prefer solo reading"
+        }
+      ],
+      "expected_active": [
+        {
+          "value": "book clubs",
+          "stance": "negative"
+        },
+        {
+          "value": "solo reading",
+          "stance": "positive"
+        }
+      ],
+      "expected_superseded": []
+    },
+    {
+      "case_id": "transition-switched-same-slot",
+      "family": "transition",
+      "user_id": "pol-transition-switched",
+      "events": [
+        {
+          "event_id": "pol-transition-switched-1",
+          "text": "I switched from tea to coffee"
+        }
+      ],
+      "expected_active": [
+        {
+          "value": "coffee",
+          "stance": "positive"
+        }
+      ],
+      "expected_superseded": [
+        {
+          "value": "tea",
+          "stance": "negative",
+          "superseded_reason": "contradiction"
+        }
+      ]
+    },
+    {
+      "case_id": "reversal-no-replacement",
+      "family": "reversal",
+      "user_id": "pol-reversal-noreplace",
+      "events": [
+        {
+          "event_id": "pol-reversal-noreplace-1",
+          "text": "Initially I liked the workshops, but later I found them tedious"
+        }
+      ],
+      "expected_active": [
+        {
+          "value": "the workshops",
+          "stance": "negative"
+        }
+      ],
+      "expected_superseded": []
+    },
+    {
+      "case_id": "abandon-moved-away",
+      "family": "reversal",
+      "user_id": "pol-abandon",
+      "events": [
+        {
+          "event_id": "pol-abandon-1",
+          "text": "I moved away from structured reading groups"
+        }
+      ],
+      "expected_active": [
+        {
+          "value": "structured reading groups",
+          "stance": "negative"
+        }
+      ],
+      "expected_superseded": []
+    },
+    {
+      "case_id": "transition-chinese",
+      "family": "transition",
+      "user_id": "pol-transition-zh",
+      "events": [
+        {
+          "event_id": "pol-transition-zh-1",
+          "text": "我以前喜欢喝茶，现在我喜欢咖啡。"
+        }
+      ],
+      "expected_active": [
+        {
+          "value": "咖啡",
+          "stance": "positive"
+        }
+      ],
+      "expected_superseded": [
+        {
+          "value": "喝茶",
+          "stance": "negative",
+          "superseded_reason": "contradiction"
+        }
+      ]
+    },
+    {
+      "case_id": "negate-chinese",
+      "family": "negation",
+      "user_id": "pol-negate-zh",
+      "events": [
+        {
+          "event_id": "pol-negate-zh-1",
+          "text": "我不再喜欢喝茶"
+        }
+      ],
+      "expected_active": [
+        {
+          "value": "喝茶",
+          "stance": "negative"
+        }
+      ],
+      "expected_superseded": []
+    },
+    {
+      "case_id": "narrative-too-time-consuming",
+      "family": "narrative",
+      "user_id": "pol-narr-podcast",
+      "events": [
+        {
+          "event_id": "pol-narr-podcast-1",
+          "text": "In 2018, I started a podcast about music trends, but it was way too time-consuming."
+        }
+      ],
+      "expected_active": [
+        {
+          "value": "podcast about music trends",
+          "stance": "negative"
+        }
+      ],
+      "expected_superseded": []
+    },
+    {
+      "case_id": "narrative-did-not-resonate",
+      "family": "narrative",
+      "user_id": "pol-narr-audio",
+      "events": [
+        {
+          "event_id": "pol-narr-audio-1",
+          "text": "I explored audio production techniques, but it just did not resonate with me."
+        }
+      ],
+      "expected_active": [
+        {
+          "value": "audio production techniques",
+          "stance": "negative"
+        }
+      ],
+      "expected_superseded": []
+    },
+    {
+      "case_id": "narrative-overwhelming",
+      "family": "narrative",
+      "user_id": "pol-narr-marathon",
+      "events": [
+        {
+          "event_id": "pol-narr-marathon-1",
+          "text": "I signed up for a reading marathon, but it became overwhelming with the length and pace."
+        }
+      ],
+      "expected_active": [
+        {
+          "value": "reading marathon",
+          "stance": "negative"
+        }
+      ],
+      "expected_superseded": []
+    },
+    {
+      "case_id": "narrative-unproductive-with-year",
+      "family": "narrative",
+      "user_id": "pol-narr-album",
+      "events": [
+        {
+          "event_id": "pol-narr-album-1",
+          "text": "I tried reviewing an album in 2019, but that did not stick either, as it felt unproductive."
+        }
+      ],
+      "expected_active": [
+        {
+          "value": "reviewing an album",
+          "stance": "negative"
+        }
+      ],
+      "expected_superseded": []
+    },
+    {
+      "case_id": "narrative-positive-stays-episodic",
+      "family": "narrative",
+      "user_id": "pol-narr-positive",
+      "events": [
+        {
+          "event_id": "pol-narr-positive-1",
+          "text": "I joined a local book club focused on contemporary fiction."
+        }
+      ],
+      "expected_active": [],
+      "expected_superseded": []
+    },
+    {
+      "case_id": "narrative-but-not-a-rejection",
+      "family": "narrative",
+      "user_id": "pol-narr-notreject",
+      "events": [
+        {
+          "event_id": "pol-narr-notreject-1",
+          "text": "I tried the new cafe but stuck with it happily."
+        }
+      ],
+      "expected_active": [],
+      "expected_superseded": []
+    }
+  ]
+}

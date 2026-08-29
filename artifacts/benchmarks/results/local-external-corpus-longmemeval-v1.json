@@ -1,0 +1,952 @@
+{
+  "check": "Meno external corpus contract validation",
+  "schema_version": "external-corpus-validation-v1",
+  "requirements_document": "MENO_DATA_REQUIREMENTS.md",
+  "mode": "sample",
+  "answer_model_calls": 0,
+  "provenance": {
+    "sessions_file": "sessions.jsonl",
+    "sessions_sha256": "c16416645f655566af106f0cc570c04b846169fe9146a2a4afff66dcf37019b4",
+    "queries_file": "queries.jsonl",
+    "queries_sha256": "57cafaa72468232b5987ca497ae3dc374a2c5c331a6a56da0e91a88187444f03"
+  },
+  "structure": {
+    "sessions": {
+      "sessions": 500,
+      "users": 500,
+      "messages": 10960,
+      "role_counts": {
+        "assistant": 5481,
+        "user": 5479
+      },
+      "messages_missing_occurred_at": 0,
+      "sessions_with_one_timestamp": 0
+    },
+    "queries": {
+      "queries_accepted": 500,
+      "decisions": {
+        "abstain": 30,
+        "inject": 470
+      },
+      "abstain_share": 0.06,
+      "causality_violations": 0,
+      "inject_without_relevant": 0,
+      "abstain_with_relevant": 0
+    },
+    "errors": [],
+    "error_count": 0,
+    "passed": true
+  },
+  "volume": {
+    "requirements": {
+      "minimum_queries": 139,
+      "abstain_share_range": [
+        0.2,
+        0.4
+      ],
+      "minimum_sessions": 30,
+      "minimum_users": 10
+    },
+    "conditions": {
+      "minimum_queries": true,
+      "abstain_share_in_range": false,
+      "minimum_sessions": true,
+      "minimum_users": true
+    },
+    "passed": false,
+    "shortfalls": [
+      "abstain_share_in_range"
+    ],
+    "rationale": "139 queries separates Recall@10 0.9 from 0.85 at 95% confidence. An abstain share in range is what makes this a negative benchmark rather than a recall-only test SPEC warns against."
+  },
+  "query_signal": {
+    "scored_queries": 462,
+    "query_signal": 0.055797531902412704,
+    "median_query_signal": 0.0,
+    "queries_with_zero_signal": 318,
+    "zero_signal_share": 0.6883116883116883,
+    "personamem_reference": 0.087,
+    "stop_below": 0.15,
+    "promising_above": 0.35,
+    "band": "STOP_DO_NOT_ANNOTATE",
+    "interpretation": "Mean 0.0558 vs 0.087 on the corpus that proved unusable. Below 0.15 the deciding evidence is not reachable from the query and no labeling scheme rescues it.",
+    "per_query": [
+      {
+        "query_id": "gpt4_2655b836",
+        "query_signal": 0.16666666666666666
+      },
+      {
+        "query_id": "gpt4_2487a7cb",
+        "query_signal": 0.09523809523809523
+      },
+      {
+        "query_id": "gpt4_76048e76",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_2312f94c",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "0bb5a684",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "08f4fc43",
+        "query_signal": 0.25
+      },
+      {
+        "query_id": "2c63a862",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_385a5000",
+        "query_signal": 0.1
+      },
+      {
+        "query_id": "2a1811e2",
+        "query_signal": 0.1111111111111111
+      },
+      {
+        "query_id": "bbf86515",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_5dcc0aab",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_0b2f1d21",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "f0853d11",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_6ed717ea",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_70e84552",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "a3838d2b",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_93159ced",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_2d58bcd6",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_65aabe59",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "982b5123",
+        "query_signal": 0.14285714285714285
+      },
+      {
+        "query_id": "b9cfe692",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_4edbafa2",
+        "query_signal": 0.1111111111111111
+      },
+      {
+        "query_id": "c8090214",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_483dd43c",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "e4e14d04",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "c9f37c46",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_2c50253f",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "dcfa8644",
+        "query_signal": 0.3333333333333333
+      },
+      {
+        "query_id": "gpt4_b4a80587",
+        "query_signal": 0.2
+      },
+      {
+        "query_id": "gpt4_9a159967",
+        "query_signal": 0.05555555555555555
+      },
+      {
+        "query_id": "cc6d1ec1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_8c8961ae",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_d9af6064",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_7de946e7",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "d01c6aa8",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "993da5e2",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "a3045048",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_d31cdae3",
+        "query_signal": 0.09090909090909091
+      },
+      {
+        "query_id": "gpt4_cd90e484",
+        "query_signal": 0.045454545454545456
+      },
+      {
+        "query_id": "gpt4_88806d6e",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_4cd9eba1",
+        "query_signal": 0.08333333333333333
+      },
+      {
+        "query_id": "gpt4_93f6379c",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "b29f3365",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_2f56ae70",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "6613b389",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_78cf46a3",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_0a05b494",
+        "query_signal": 0.07142857142857142
+      },
+      {
+        "query_id": "gpt4_1a1dc16d",
+        "query_signal": 0.125
+      },
+      {
+        "query_id": "gpt4_2f584639",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_213fd887",
+        "query_signal": 0.4
+      },
+      {
+        "query_id": "gpt4_5438fa52",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_c27434e8",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_fe651585",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "8c18457d",
+        "query_signal": 0.1
+      },
+      {
+        "query_id": "0a995998",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "6d550036",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_59c863d7",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "b5ef892d",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "e831120c",
+        "query_signal": 0.125
+      },
+      {
+        "query_id": "3a704032",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_d84a3211",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "aae3761f",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_f2262a51",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "dd2973ad",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "c4a1ceb8",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_a56e767c",
+        "query_signal": 0.034482758620689655
+      },
+      {
+        "query_id": "6cb6f249",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "46a3abf7",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "36b9f61e",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "28dc39ac",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_2f8be40d",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "2e6d26dc",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_15e38248",
+        "query_signal": 0.03571428571428571
+      },
+      {
+        "query_id": "88432d0a",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "80ec1f4f",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "d23cf73b",
+        "query_signal": 0.14285714285714285
+      },
+      {
+        "query_id": "gpt4_7fce9456",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "d682f1a2",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "7024f17c",
+        "query_signal": 0.16666666666666666
+      },
+      {
+        "query_id": "gpt4_5501fe77",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_2ba83207",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "2318644b",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "2ce6a0f2",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_d12ceb0e",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "00ca467f",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "b3c15d39",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_31ff4165",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "eeda8a6d",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "2788b940",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "60bf93ed",
+        "query_signal": 0.0625
+      },
+      {
+        "query_id": "9d25d4e0",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "129d1232",
+        "query_signal": 0.125
+      },
+      {
+        "query_id": "60472f9c",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_194be4b3",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "a9f6b44c",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "d851d5ba",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "5a7937c8",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_ab202e7f",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "gpt4_e05b82a6",
+        "query_signal": 0.1111111111111111
+      },
+      {
+        "query_id": "gpt4_731e37d7",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "edced276",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "10d9b85a",
+        "query_signal": 0.05555555555555555
+      },
+      {
+        "query_id": "e3038f8c",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "2b8f3739",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "1a8a66a6",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "c2ac3c61",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "bf659f65",
+        "query_signal": 0.25
+      },
+      {
+        "query_id": "gpt4_372c3eed",
+        "query_signal": 0.045454545454545456
+      },
+      {
+        "query_id": "gpt4_2f91af09",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "81507db6",
+        "query_signal": 0.125
+      },
+      {
+        "query_id": "6a1eabeb",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "6aeb4375",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "830ce83f",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "852ce960",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "945e3d21",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "d7c942c3",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "71315a70",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "89941a93",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "ce6d2d27",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "9ea5eabc",
+        "query_signal": 0.3333333333333333
+      },
+      {
+        "query_id": "07741c44",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "a1eacc2a",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "184da446",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "031748ae",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "4d6b87c8",
+        "query_signal": 0.125
+      },
+      {
+        "query_id": "0f05491a",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "08e075c7",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "f9e8c073",
+        "query_signal": 0.2
+      },
+      {
+        "query_id": "41698283",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "2698e78f",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "b6019101",
+        "query_signal": 0.2
+      },
+      {
+        "query_id": "45dc21b6",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "5a4f22c0",
+        "query_signal": 0.2222222222222222
+      },
+      {
+        "query_id": "6071bd76",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "e493bb7c",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "618f13b2",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "72e3ee87",
+        "query_signal": 0.2
+      },
+      {
+        "query_id": "c4ea545c",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "01493427",
+        "query_signal": 0.15384615384615385
+      },
+      {
+        "query_id": "6a27ffc2",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "2133c1b5",
+        "query_signal": 0.1
+      },
+      {
+        "query_id": "18bc8abd",
+        "query_signal": 0.08333333333333333
+      },
+      {
+        "query_id": "db467c8c",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "7a87bd0c",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "e61a7584",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "1cea1afa",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "ed4ddc30",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "8fb83627",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "b01defab",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "0e4e4c46",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "4b24c848",
+        "query_signal": 0.2
+      },
+      {
+        "query_id": "7e974930",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "603deb26",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "59524333",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "5831f84d",
+        "query_signal": 0.2
+      },
+      {
+        "query_id": "eace081b",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "affe2881",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "50635ada",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "e66b632c",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "0ddfec37",
+        "query_signal": 0.11764705882352941
+      },
+      {
+        "query_id": "f685340e",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "dfde3500",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "69fee5aa",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "7401057b",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "cf22b7bf",
+        "query_signal": 0.15384615384615385
+      },
+      {
+        "query_id": "a2f3aa27",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "c7dc5443",
+        "query_signal": 0.14285714285714285
+      },
+      {
+        "query_id": "06db6396",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "3ba21379",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "9bbe84a2",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "10e09553",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "dad224aa",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "ba61f0b9",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "42ec0761",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "5c40ec5b",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "c6853660",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "26bdc477",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "0977f2af",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "89941a94",
+        "query_signal": 0.16666666666666666
+      },
+      {
+        "query_id": "07741c45",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "8a2466db",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "06878be2",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "75832dbd",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "0edc2aef",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "35a27287",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "32260d93",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "195a1a1b",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "afdc33df",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "caf03d32",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "54026fce",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "06f04340",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "6b7dfb22",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "1a1907b4",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "09d032c9",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "38146c39",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "d24813b1",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "57f827a0",
+        "query_signal": 0.3333333333333333
+      },
+      {
+        "query_id": "95228167",
+        "query_signal": 0.0
+      },
+      {
+        "query_id": "505af2f5",
+        "query_signal": 1.0
+      },
+      {
+        "query_id": "d6233ab6",
+        "query_signal": 0.0
+      }
+    ]
+  },
+  "privacy_scan": {
+    "patterns_matched": {
+      "email": 12
+    },
+    "total_matches": 12,
+    "locations": [
+      {
+        "session_id": "031748ae",
+        "index": 5,
+        "pattern": "email"
+      },
+      {
+        "session_id": "5a4f22c0",
+        "index": 1,
+        "pattern": "email"
+      },
+      {
+        "session_id": "5a4f22c0",
+        "index": 3,
+        "pattern": "email"
+      },
+      {
+        "session_id": "5a4f22c0",
+        "index": 7,
+        "pattern": "email"
+      },
+      {
+        "session_id": "5a4f22c0",
+        "index": 9,
+        "pattern": "email"
+      },
+      {
+        "session_id": "5a4f22c0",
+        "index": 11,
+        "pattern": "email"
+      },
+      {
+        "session_id": "50635ada",
+        "index": 3,
+        "pattern": "email"
+      },
+      {
+        "session_id": "031748ae_abs",
+        "index": 5,
+        "pattern": "email"
+      },
+      {
+        "session_id": "71a3fd6b",
+        "index": 3,
+        "pattern": "email"
+      },
+      {
+        "session_id": "gpt4_b5700ca9",
+        "index": 7,
+        "pattern": "email"
+      },
+      {
+        "session_id": "gpt4_f420262d",
+        "index": 39,
+        "pattern": "email"
+      },
+      {
+        "session_id": "gpt4_b5700ca0",
+        "index": 7,
+        "pattern": "email"
+      }
+    ],
+    "clean": false,
+    "caveat": "A backstop, not a compliance guarantee. It cannot detect paraphrased personal information, sensitive topics, or identifiers it has no pattern for. The operator's own review is what protects the data."
+  },
+  "verdict": {
+    "contract_satisfied": true,
+    "annotation_recommendation": "STOP_DO_NOT_ANNOTATE",
+    "next_step": "Do not annotate this corpus. Re-sample toward queries that name what they ask about (MENO_DATA_REQUIREMENTS.md §1.7), then re-run."
+  },
+  "scope": "Validates the export contract and predicts annotation viability. It does not score Recall@10 or nDCG@10, and passing it does not move Gate Charter #13/#14 -- those need the annotated set itself."
+}

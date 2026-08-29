@@ -1,0 +1,19 @@
+{
+  "schema_version": "state-replay-baseline-v1",
+  "description": "Frozen per-dimension state digests for the SPEC :1393 replay lane. Regenerate only with a recorded reason: a changed digest means the stored user model changed.",
+  "fixture": "ucm-oracle-v1.json",
+  "fixture_sha256": "517b9af7a15ab585d5695d62a544abd9aca49606835718dee6a7ce678abe1770",
+  "uncovered_dimensions": [
+    "community_memberships"
+  ],
+  "digests": {
+    "claim_set": "sha256:3dfe3163727024873081371f4651352be5bc977532569b6441b3246397dc688e",
+    "claim_statuses": "sha256:6b4de13f27d0288894d55116cf8417fd9db86247e7886843d96822668089793b",
+    "preference_distributions": "sha256:618f3baaddd65293cd736bf34f9f3af914dfd7d522dc368727c77aa25bf38037",
+    "community_memberships": null,
+    "token_revision": "sha256:693ed24b359d507850e3969735ce8ff950cf58d9836733ad7ddd2a0e33f9167f",
+    "retrieval_results": "sha256:13d1b67cb9af29f1d1037f22db83aaaadf125ce9f58dd11b5f0e807fa0a8531f",
+    "audit_lineage": "sha256:016342aae3f43414a0dc102596137948b1857a02c73f9cf7183fcc16a865e31d",
+    "rendered_context": "sha256:1fc4a4c6c0a0c070f2feb73e1e45b4955fe3d5ddd41759919e20b1c9258eb978"
+  }
+}

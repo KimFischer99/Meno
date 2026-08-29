@@ -1,0 +1,42 @@
+{
+  "config_version": "semantic-router-a3-frozen-v1",
+  "freeze_revision": "a3.1-provider-scored",
+  "frozen_at": "2026-08-21T04:48:06Z",
+  "development_evidence": {
+    "run_id": "751e24df-b8e4-4068-9054-b7f64e53507a",
+    "fixture_version": "semantic-normalization-v2",
+    "fixture_sha256": "908d9f21b184fc0ce9fe273be91890b0fc402ab34cf9cdaa1ca630eeba7305d7",
+    "runner_sha256": "1a3230b85f585e04b2a3ca26c3036a54746df6d33aa2e72f02b9252c772af118",
+    "false_merge_count": 0,
+    "recall": 0.8541666666666666,
+    "safety_passed": true,
+    "robustness_passed": true
+  },
+  "strategy": {
+    "strategy_version": "meno-prototype-ensemble-2.0.0",
+    "router_version": "meno-policy-router-2.0.0",
+    "router_sha256": "dd1fe5f08c91779c08849f508d0abc2febf02c4319dbc2d353a3277840a326bf",
+    "prototype_version": "semantic-prototypes-a3-v1",
+    "prototype_sha256": "8e7a8e2e1b2c2f608d72c78289236e2883303039b5957bba343403f27fcd8fbe",
+    "aggregation": "top2_mean",
+    "score_threshold": 0.425,
+    "margin_threshold": 0.0
+  },
+  "dependencies": {
+    "config_module_sha256": "678f991ec6b435729801eb05e8324d920443eb2da863ca6a697c5d486d505119",
+    "semantic_router_shadow_runner_sha256": "8539441df410adda8e3125865f1615e031597467474e83b4fb2bbe6fb755b24a",
+    "extractor_sha256": "78f35d436b6d3a5040ce45010fed6993a90e880ec835cd9ba820d368192c256a",
+    "vector_sha256": "400d3c70f065513d93c6dbaa1628a1c4e831e8d915f4969dac80fe5e4e920bdf"
+  },
+  "fresh_holdout_gate": {
+    "minimum_recall": 0.5,
+    "false_merge_count": 0,
+    "safety_all_correct": true,
+    "robustness_all_correct": true,
+    "minimum_provider_scored_count": 35,
+    "minimum_provider_scored_per_dimension": 4,
+    "threshold_search_allowed": false,
+    "prototype_changes_allowed": false,
+    "router_changes_allowed": false
+  }
+}

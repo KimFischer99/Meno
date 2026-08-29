@@ -1,0 +1,190 @@
+{
+  "prototype_version": "semantic-prototypes-a5-v2",
+  "basis": "a5-anchor-search revealed-development selection (variant a5_en_broad_answer_style)",
+  "design": "a5_en_concrete plus broader synonym coverage in the answer_style polarity anchors",
+  "language": "english-only anchors; candidates may be english or chinese",
+  "dimensions": {
+    "answer_style": [
+      {
+        "id": "topic",
+        "role": "topic",
+        "polarity": "neutral",
+        "text": "writing and answering style preference: prose, wording, verbosity, concision, and organization of notes and answers"
+      },
+      {
+        "id": "affirmed",
+        "role": "polarity",
+        "polarity": "affirmed",
+        "text": "I prefer concise, brief, direct answers and notes that lead with the main point, core message, or takeaway"
+      },
+      {
+        "id": "negated",
+        "role": "polarity",
+        "polarity": "negated",
+        "text": "I no longer want meandering, verbose, roundabout prose, wording, or unnecessary preamble and background"
+      },
+      {
+        "id": "contradiction",
+        "role": "polarity",
+        "polarity": "contradiction",
+        "text": "I switched my answer style from long, detailed explanations to short, point-first summaries"
+      }
+    ],
+    "beverage": [
+      {
+        "id": "topic",
+        "role": "topic",
+        "polarity": "neutral",
+        "text": "beverage or drink preference such as coffee, tea, juice, soda, or water"
+      },
+      {
+        "id": "affirmed",
+        "role": "polarity",
+        "polarity": "affirmed",
+        "text": "I prefer choosing a beverage to drink"
+      },
+      {
+        "id": "negated",
+        "role": "polarity",
+        "polarity": "negated",
+        "text": "I no longer choose or consume a beverage"
+      },
+      {
+        "id": "contradiction",
+        "role": "polarity",
+        "polarity": "contradiction",
+        "text": "I changed my beverage preference from one drink to another"
+      }
+    ],
+    "color": [
+      {
+        "id": "topic",
+        "role": "topic",
+        "polarity": "neutral",
+        "text": "color, hue, tint, and visual design preference such as blue, green, amber, or pastel tones"
+      },
+      {
+        "id": "affirmed",
+        "role": "polarity",
+        "polarity": "affirmed",
+        "text": "I prefer choosing a color for appearance or design"
+      },
+      {
+        "id": "negated",
+        "role": "polarity",
+        "polarity": "negated",
+        "text": "I no longer want or use a color in the design"
+      },
+      {
+        "id": "contradiction",
+        "role": "polarity",
+        "polarity": "contradiction",
+        "text": "I changed my color preference from one hue to another"
+      }
+    ],
+    "food": [
+      {
+        "id": "topic",
+        "role": "topic",
+        "polarity": "neutral",
+        "text": "food, dish, and eating preference such as noodles, dumplings, barbecue, or salad"
+      },
+      {
+        "id": "affirmed",
+        "role": "polarity",
+        "polarity": "affirmed",
+        "text": "I prefer eating a particular food or dish"
+      },
+      {
+        "id": "negated",
+        "role": "polarity",
+        "polarity": "negated",
+        "text": "I no longer want to eat or choose a food"
+      },
+      {
+        "id": "contradiction",
+        "role": "polarity",
+        "polarity": "contradiction",
+        "text": "I changed my food preference from one dish to another"
+      }
+    ],
+    "music": [
+      {
+        "id": "topic",
+        "role": "topic",
+        "polarity": "neutral",
+        "text": "music listening, composition, and performance preference such as jazz, rock, classical, or pop"
+      },
+      {
+        "id": "affirmed",
+        "role": "polarity",
+        "polarity": "affirmed",
+        "text": "I prefer listening to or performing a kind of music"
+      },
+      {
+        "id": "negated",
+        "role": "polarity",
+        "polarity": "negated",
+        "text": "I no longer want to listen to or perform a kind of music"
+      },
+      {
+        "id": "contradiction",
+        "role": "polarity",
+        "polarity": "contradiction",
+        "text": "I changed my music preference from one style to another"
+      }
+    ],
+    "programming_language": [
+      {
+        "id": "topic",
+        "role": "topic",
+        "polarity": "neutral",
+        "text": "programming language, source code, and software development such as Python, JavaScript, Rust, or Go"
+      },
+      {
+        "id": "affirmed",
+        "role": "polarity",
+        "polarity": "affirmed",
+        "text": "I prefer using a programming language to write and run software"
+      },
+      {
+        "id": "negated",
+        "role": "polarity",
+        "polarity": "negated",
+        "text": "I no longer use or prefer a programming language for code"
+      },
+      {
+        "id": "contradiction",
+        "role": "polarity",
+        "polarity": "contradiction",
+        "text": "I switched from one programming language to another for coding"
+      }
+    ],
+    "sport": [
+      {
+        "id": "topic",
+        "role": "topic",
+        "polarity": "neutral",
+        "text": "sport, exercise, and physical activity preference such as running, swimming, climbing, or yoga"
+      },
+      {
+        "id": "affirmed",
+        "role": "polarity",
+        "polarity": "affirmed",
+        "text": "I prefer doing a sport or training activity"
+      },
+      {
+        "id": "negated",
+        "role": "polarity",
+        "polarity": "negated",
+        "text": "I quit or avoid a sport or physical activity"
+      },
+      {
+        "id": "contradiction",
+        "role": "polarity",
+        "polarity": "contradiction",
+        "text": "I changed my sport preference from one activity to another"
+      }
+    ]
+  }
+}

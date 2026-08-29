@@ -1,0 +1,168 @@
+{
+  "benchmark": "Meno full-state replay determinism (Meno_SPEC.md:1393)",
+  "gate_charter_item": 12,
+  "schema_version": "state-replay-baseline-v1",
+  "fixture": "benchmarks/fixtures/ucm-oracle-v1.json",
+  "fixture_sha256": "517b9af7a15ab585d5695d62a544abd9aca49606835718dee6a7ce678abe1770",
+  "answer_model_calls": 0,
+  "cohorts": [
+    "adversarial",
+    "contradictory",
+    "drifting",
+    "static"
+  ],
+  "dimensions": {
+    "claim_set": {
+      "covered": true,
+      "digest": "sha256:3dfe3163727024873081371f4651352be5bc977532569b6441b3246397dc688e",
+      "excluded_fields": [
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "claim_statuses": {
+      "covered": true,
+      "digest": "sha256:6b4de13f27d0288894d55116cf8417fd9db86247e7886843d96822668089793b",
+      "excluded_fields": [
+        "valid_to",
+        "updated_at"
+      ]
+    },
+    "preference_distributions": {
+      "covered": true,
+      "digest": "sha256:618f3baaddd65293cd736bf34f9f3af914dfd7d522dc368727c77aa25bf38037",
+      "excluded_fields": [
+        "id",
+        "updated_at"
+      ]
+    },
+    "community_memberships": {
+      "covered": false,
+      "digest": null,
+      "excluded_fields": [],
+      "uncovered_reason": "community_memberships is not implemented: no table, no projection, and no retrieval path exists (Gate Charter #17). Reporting it as uncovered rather than digesting an empty set, which would read as a passing comparison."
+    },
+    "token_revision": {
+      "covered": true,
+      "digest": "sha256:693ed24b359d507850e3969735ce8ff950cf58d9836733ad7ddd2a0e33f9167f",
+      "excluded_fields": [
+        "id",
+        "created_at"
+      ]
+    },
+    "retrieval_results": {
+      "covered": true,
+      "digest": "sha256:13d1b67cb9af29f1d1037f22db83aaaadf125ce9f58dd11b5f0e807fa0a8531f",
+      "excluded_fields": [
+        "trace_id"
+      ]
+    },
+    "audit_lineage": {
+      "covered": true,
+      "digest": "sha256:016342aae3f43414a0dc102596137948b1857a02c73f9cf7183fcc16a865e31d",
+      "excluded_fields": [
+        "id",
+        "trace_id",
+        "prev_hash",
+        "current_hash",
+        "created_at"
+      ]
+    },
+    "rendered_context": {
+      "covered": true,
+      "digest": "sha256:1fc4a4c6c0a0c070f2feb73e1e45b4955fe3d5ddd41759919e20b1c9258eb978",
+      "excluded_fields": []
+    }
+  },
+  "dimensions_covered": 7,
+  "dimensions_total": 8,
+  "replay_determinism": {
+    "passes": 2,
+    "drifted_dimensions": [],
+    "passed": true
+  },
+  "audit_chain": {
+    "first_pass": {
+      "rows": 24,
+      "roots": 1,
+      "dangling": 0,
+      "forks": 0,
+      "hash_mismatch": 0,
+      "passed": true
+    },
+    "second_pass": {
+      "rows": 24,
+      "roots": 1,
+      "dangling": 0,
+      "forks": 0,
+      "hash_mismatch": 0,
+      "passed": true
+    },
+    "passed": true
+  },
+  "baseline": {
+    "mode": "compared",
+    "path": "benchmarks/fixtures/state-replay-baseline-v1.json",
+    "fixture_sha256_matches": true,
+    "drift": []
+  },
+  "self_check": {
+    "ran": true,
+    "probes": [
+      {
+        "probe": "truncated_event_log",
+        "rationale": "Dropping each case's last event must change the person's model. If it does not, the digests are not reading the event log.",
+        "must_change": [
+          "claim_set",
+          "claim_statuses",
+          "token_revision",
+          "retrieval_results",
+          "rendered_context"
+        ],
+        "changed_dimensions": [
+          "claim_set",
+          "claim_statuses",
+          "preference_distributions",
+          "token_revision",
+          "retrieval_results",
+          "audit_lineage",
+          "rendered_context"
+        ],
+        "unresponsive_dimensions": [],
+        "passed": true
+      },
+      {
+        "probe": "extractor_version",
+        "rationale": "SPEC :1393's stated purpose: detect that swapping the extractor changed stored state. Claim identity derives from the extractor version.",
+        "must_change": [
+          "claim_set"
+        ],
+        "changed_dimensions": [
+          "claim_set",
+          "claim_statuses",
+          "token_revision",
+          "retrieval_results",
+          "audit_lineage"
+        ],
+        "unresponsive_dimensions": [],
+        "passed": true
+      },
+      {
+        "probe": "embedding_dimension",
+        "rationale": "Swapping the embedding must be visible. Scores and ordering come from the embedder, so retrieval state must respond even when claims do not.",
+        "must_change": [
+          "retrieval_results"
+        ],
+        "changed_dimensions": [
+          "retrieval_results",
+          "audit_lineage"
+        ],
+        "unresponsive_dimensions": [],
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  "passed": true,
+  "spec_1393_fully_covered": false
+}

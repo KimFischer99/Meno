@@ -1,0 +1,34 @@
+{
+  "converter": "locomo -> meno external-corpus-v1",
+  "items_read": 10,
+  "sessions_emitted": 10,
+  "queries_emitted": 1270,
+  "messages_emitted": 5882,
+  "abstain_queries": 446,
+  "dropped_no_resolvable_evidence": 9,
+  "dropped_evidence_only_on_counterpart_turns": 707,
+  "malformed_evidence_pointers": 9,
+  "malformed_evidence_samples": [
+    "conv-26:q37:D8:6; D9:17",
+    "conv-42:q58:D10:19",
+    "conv-42:q88:D",
+    "conv-43:q18:D:11:26",
+    "conv-47:q38:D4:36",
+    "conv-49:q31:D9:1 D4:4 D4:6",
+    "conv-49:q38:D22:1 D22:2 D9:10 D9:11",
+    "conv-49:q46:D21:18 D21:22 D11:15 D11:19",
+    "conv-50:q69:D30:05"
+  ],
+  "conversion_decisions": {
+    "speaker_roles": "speaker_a -> user (the modeled subject), speaker_b -> assistant; queries whose evidence lies only on speaker_b turns are dropped because Meno does not extract user claims from counterpart turns",
+    "adversarial_is_abstain": "category 5 carries adversarial_answer and is unanswerable from the conversation, so it maps to expected_decision=abstain with an empty label",
+    "one_conversation_is_one_session": "dated sessions concatenated in session order under user_key=sample_id; 'session' means one user's whole history",
+    "timestamps_synthesized": "per-session date plus 1 minute(s) per turn; absolute times are not real, order is"
+  },
+  "labels_are_dataset_provenance": "relevant_message_indices comes from LoCoMo's own per-turn evidence dia_id pointers, not from reading answers (Charter §3 rule 2)",
+  "source": {
+    "file": "locomo10.json",
+    "sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4",
+    "license": "CC BY-NC 4.0 (not redistributed by this repository)"
+  }
+}

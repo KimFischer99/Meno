@@ -1,0 +1,56 @@
+[Unit]
+Description=Meno memory sidecar
+Documentation=https://github.com/replace-with-your-org/replace-with-repo/blob/main/deploy/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# Review before enabling. Create with:
+#   sudo useradd --system --home /var/lib/meno --shell /usr/sbin/nologin meno
+User=meno
+Group=meno
+
+WorkingDirectory=/opt/meno
+EnvironmentFile=/etc/meno.env
+ExecStart=/opt/meno/deploy/start.sh
+
+Restart=on-failure
+RestartSec=5s
+# Do not restart forever on a bad config: five failures in two minutes means the
+# problem is not transient, and a crash loop that keeps binding the port is worse
+# than a stopped service Hermes can route around.
+StartLimitIntervalSec=120
+StartLimitBurst=5
+
+# Kernel-level backstop, independent of MENO_VECTOR_MAX_RESIDENT. That setting
+# bounds vectors only; this bounds everything. Budget: ~130 MB baseline plus
+# ~4.1 KB per resident vector (80 MB at the default 20k cap), leaving headroom
+# for request handling. Raise both together if you raise either.
+MemoryMax=400M
+MemoryHigh=340M
+
+# Hardening. The service needs to read the repository and write one directory.
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+# The canonical SQLite database and its write-ahead files.
+ReadWritePaths=/var/lib/meno
+# Loopback plus outbound HTTPS to the embedding provider.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=meno
+
+[Install]
+WantedBy=multi-user.target

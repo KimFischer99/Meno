@@ -1,0 +1,224 @@
+{
+  "fixture_version": "semantic-prototypes-a5-anchor-search-v1",
+  "basis": "development-only anchor redesign search; never a frozen gate input",
+  "note": "Anchor texts for A5 redesign exploration. Candidate-facing roles and ids mirror semantic-prototypes-a3-v1 so results stay comparable.",
+  "variants": {
+    "a5_en_only": {
+      "design": "identical texts to semantic-prototypes-a3-v1 with the Chinese half removed",
+      "dimensions": {
+        "answer_style": {
+          "topic": "writing and answer style, including prose, wording, verbosity, concision, structure, and organization",
+          "affirmed": "I prefer concise, direct answers with the main point first",
+          "negated": "I no longer want meandering, verbose, or roundabout prose and wording",
+          "contradiction": "I changed my answer style from detailed explanations to concise answers"
+        },
+        "beverage": {
+          "topic": "beverage or drink preference",
+          "affirmed": "I prefer choosing a beverage to drink",
+          "negated": "I no longer choose or consume a beverage",
+          "contradiction": "I changed my beverage preference from one drink to another"
+        },
+        "color": {
+          "topic": "color, hue, tint, and visual design preference",
+          "affirmed": "I prefer choosing a color for appearance or design",
+          "negated": "I no longer want or use a color in the design",
+          "contradiction": "I changed my color preference from one hue to another"
+        },
+        "food": {
+          "topic": "food, dish, and eating preference",
+          "affirmed": "I prefer eating a particular food or dish",
+          "negated": "I no longer want to eat or choose a food",
+          "contradiction": "I changed my food preference from one dish to another"
+        },
+        "music": {
+          "topic": "music listening, composition, and performance preference",
+          "affirmed": "I prefer listening to or performing a kind of music",
+          "negated": "I no longer want to listen to or perform a kind of music",
+          "contradiction": "I changed my music preference from one style to another"
+        },
+        "programming_language": {
+          "topic": "programming language, source code, and software development",
+          "affirmed": "I prefer using a programming language to write and run software",
+          "negated": "I no longer use or prefer a programming language for code",
+          "contradiction": "I switched from one programming language to another for coding"
+        },
+        "sport": {
+          "topic": "sport, exercise, and physical activity preference",
+          "affirmed": "I prefer doing a sport or training activity",
+          "negated": "I quit or avoid a sport or physical activity",
+          "contradiction": "I changed my sport preference from one activity to another"
+        }
+      }
+    },
+    "a5_en_concrete": {
+      "design": "English-only with concrete domain exemplars added to every topic anchor",
+      "dimensions": {
+        "answer_style": {
+          "topic": "writing and answering style preference: prose, wording, verbosity, concision, and organization of notes and answers",
+          "affirmed": "I prefer concise, direct answers with the main point first",
+          "negated": "I no longer want meandering, verbose, or roundabout prose and wording",
+          "contradiction": "I changed my answer style from detailed explanations to concise answers"
+        },
+        "beverage": {
+          "topic": "beverage or drink preference such as coffee, tea, juice, soda, or water",
+          "affirmed": "I prefer choosing a beverage to drink",
+          "negated": "I no longer choose or consume a beverage",
+          "contradiction": "I changed my beverage preference from one drink to another"
+        },
+        "color": {
+          "topic": "color, hue, tint, and visual design preference such as blue, green, amber, or pastel tones",
+          "affirmed": "I prefer choosing a color for appearance or design",
+          "negated": "I no longer want or use a color in the design",
+          "contradiction": "I changed my color preference from one hue to another"
+        },
+        "food": {
+          "topic": "food, dish, and eating preference such as noodles, dumplings, barbecue, or salad",
+          "affirmed": "I prefer eating a particular food or dish",
+          "negated": "I no longer want to eat or choose a food",
+          "contradiction": "I changed my food preference from one dish to another"
+        },
+        "music": {
+          "topic": "music listening, composition, and performance preference such as jazz, rock, classical, or pop",
+          "affirmed": "I prefer listening to or performing a kind of music",
+          "negated": "I no longer want to listen to or perform a kind of music",
+          "contradiction": "I changed my music preference from one style to another"
+        },
+        "programming_language": {
+          "topic": "programming language, source code, and software development such as Python, JavaScript, Rust, or Go",
+          "affirmed": "I prefer using a programming language to write and run software",
+          "negated": "I no longer use or prefer a programming language for code",
+          "contradiction": "I switched from one programming language to another for coding"
+        },
+        "sport": {
+          "topic": "sport, exercise, and physical activity preference such as running, swimming, climbing, or yoga",
+          "affirmed": "I prefer doing a sport or training activity",
+          "negated": "I quit or avoid a sport or physical activity",
+          "contradiction": "I changed my sport preference from one activity to another"
+        }
+      }
+    },
+    "a5_en_broad_answer_style": {
+      "design": "a5_en_concrete plus broader synonym coverage in the answer_style polarity anchors",
+      "dimensions": {
+        "answer_style": {
+          "topic": "writing and answering style preference: prose, wording, verbosity, concision, and organization of notes and answers",
+          "affirmed": "I prefer concise, brief, direct answers and notes that lead with the main point, core message, or takeaway",
+          "negated": "I no longer want meandering, verbose, roundabout prose, wording, or unnecessary preamble and background",
+          "contradiction": "I switched my answer style from long, detailed explanations to short, point-first summaries"
+        },
+        "beverage": {
+          "topic": "beverage or drink preference such as coffee, tea, juice, soda, or water",
+          "affirmed": "I prefer choosing a beverage to drink",
+          "negated": "I no longer choose or consume a beverage",
+          "contradiction": "I changed my beverage preference from one drink to another"
+        },
+        "color": {
+          "topic": "color, hue, tint, and visual design preference such as blue, green, amber, or pastel tones",
+          "affirmed": "I prefer choosing a color for appearance or design",
+          "negated": "I no longer want or use a color in the design",
+          "contradiction": "I changed my color preference from one hue to another"
+        },
+        "food": {
+          "topic": "food, dish, and eating preference such as noodles, dumplings, barbecue, or salad",
+          "affirmed": "I prefer eating a particular food or dish",
+          "negated": "I no longer want to eat or choose a food",
+          "contradiction": "I changed my food preference from one dish to another"
+        },
+        "music": {
+          "topic": "music listening, composition, and performance preference such as jazz, rock, classical, or pop",
+          "affirmed": "I prefer listening to or performing a kind of music",
+          "negated": "I no longer want to listen to or perform a kind of music",
+          "contradiction": "I changed my music preference from one style to another"
+        },
+        "programming_language": {
+          "topic": "programming language, source code, and software development such as Python, JavaScript, Rust, or Go",
+          "affirmed": "I prefer using a programming language to write and run software",
+          "negated": "I no longer use or prefer a programming language for code",
+          "contradiction": "I switched from one programming language to another for coding"
+        },
+        "sport": {
+          "topic": "sport, exercise, and physical activity preference such as running, swimming, climbing, or yoga",
+          "affirmed": "I prefer doing a sport or training activity",
+          "negated": "I quit or avoid a sport or physical activity",
+          "contradiction": "I changed my sport preference from one activity to another"
+        }
+      }
+    },
+    "a5_dual_language": {
+      "design": "eight anchors per dimension: the original English and Chinese texts kept as separate same-role anchors",
+      "anchor_roles_per_dimension": ["topic_en", "topic_zh", "affirmed_en", "affirmed_zh", "negated_en", "negated_zh", "contradiction_en", "contradiction_zh"],
+      "dimensions": {
+        "answer_style": {
+          "topic_en": "writing and answer style, including prose, wording, verbosity, concision, structure, and organization",
+          "topic_zh": "写作与回答风格，包括文风、措辞、详略、简洁度、结构和组织方式",
+          "affirmed_en": "I prefer concise, direct answers with the main point first",
+          "affirmed_zh": "我偏好简洁直接、先讲重点的回答",
+          "negated_en": "I no longer want meandering, verbose, or roundabout prose and wording",
+          "negated_zh": "我不再想要绕圈、冗长或啰嗦的文风和措辞",
+          "contradiction_en": "I changed my answer style from detailed explanations to concise answers",
+          "contradiction_zh": "我改变了回答风格，从详细解释转为简洁回答"
+        },
+        "beverage": {
+          "topic_en": "beverage or drink preference",
+          "topic_zh": "饮品或饮料偏好",
+          "affirmed_en": "I prefer choosing a beverage to drink",
+          "affirmed_zh": "我偏好选择饮用的饮品",
+          "negated_en": "I no longer choose or consume a beverage",
+          "negated_zh": "我不再选择或饮用某种饮品",
+          "contradiction_en": "I changed my beverage preference from one drink to another",
+          "contradiction_zh": "我把饮品偏好从一种饮料改成另一种"
+        },
+        "color": {
+          "topic_en": "color, hue, tint, and visual design preference",
+          "topic_zh": "颜色、色调、色泽与视觉设计偏好",
+          "affirmed_en": "I prefer choosing a color for appearance or design",
+          "affirmed_zh": "我偏好为外观或设计选择一种颜色",
+          "negated_en": "I no longer want or use a color in the design",
+          "negated_zh": "我不再想要或使用某种设计颜色",
+          "contradiction_en": "I changed my color preference from one hue to another",
+          "contradiction_zh": "我把颜色偏好从一种色调改成另一种"
+        },
+        "food": {
+          "topic_en": "food, dish, and eating preference",
+          "topic_zh": "食物、菜肴与进食偏好",
+          "affirmed_en": "I prefer eating a particular food or dish",
+          "affirmed_zh": "我偏好吃某种食物或菜肴",
+          "negated_en": "I no longer want to eat or choose a food",
+          "negated_zh": "我不再想吃或选择某种食物",
+          "contradiction_en": "I changed my food preference from one dish to another",
+          "contradiction_zh": "我把食物偏好从一道菜改成另一道"
+        },
+        "music": {
+          "topic_en": "music listening, composition, and performance preference",
+          "topic_zh": "音乐聆听、创作与演奏偏好",
+          "affirmed_en": "I prefer listening to or performing a kind of music",
+          "affirmed_zh": "我偏好聆听或演奏某类音乐",
+          "negated_en": "I no longer want to listen to or perform a kind of music",
+          "negated_zh": "我不再想聆听或演奏某类音乐",
+          "contradiction_en": "I changed my music preference from one style to another",
+          "contradiction_zh": "我把音乐偏好从一种风格改成另一种"
+        },
+        "programming_language": {
+          "topic_en": "programming language, source code, and software development",
+          "topic_zh": "编程语言、源代码与软件开发",
+          "affirmed_en": "I prefer using a programming language to write and run software",
+          "affirmed_zh": "我偏好使用某种编程语言编写和运行软件",
+          "negated_en": "I no longer use or prefer a programming language for code",
+          "negated_zh": "我不再使用或偏好某种编程语言来写代码",
+          "contradiction_en": "I switched from one programming language to another for coding",
+          "contradiction_zh": "我为了编程从一种编程语言切换到另一种"
+        },
+        "sport": {
+          "topic_en": "sport, exercise, and physical activity preference",
+          "topic_zh": "运动、锻炼与体育活动偏好",
+          "affirmed_en": "I prefer doing a sport or training activity",
+          "affirmed_zh": "我偏好进行某项运动或训练活动",
+          "negated_en": "I quit or avoid a sport or physical activity",
+          "negated_zh": "我停止或回避某项运动或体育活动",
+          "contradiction_en": "I changed my sport preference from one activity to another",
+          "contradiction_zh": "我把运动偏好从一项活动改成另一项"
+        }
+      }
+    }
+  }
+}

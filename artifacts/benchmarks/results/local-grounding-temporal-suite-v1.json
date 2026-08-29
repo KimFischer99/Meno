@@ -1,0 +1,683 @@
+{
+  "benchmark": "Meno grounding and temporal gate suite",
+  "gate_charter_items": [
+    8,
+    9,
+    10
+  ],
+  "schema_version": "grounding-temporal-suite-v1",
+  "answer_model_calls": 0,
+  "provenance": {
+    "source": "corpus",
+    "contexts_file": "shared_contexts_32k.jsonl",
+    "contexts_sha256": "217247ebfec9e8442fc53570c795ab69f21aad08745f7de78d9beab51b122d4a",
+    "questions_file": "questions_32k.csv",
+    "questions_sha256": "cccd34cf53e0bc4d9536c04cff5ca045156d9a4e227e83327112482840bbc93c",
+    "contexts_used": 37,
+    "events_ingested": 3363,
+    "questions_asked": 589
+  },
+  "injected_facets": 4712,
+  "metrics": {
+    "evidence_attribution_coverage": {
+      "charter_item": 8,
+      "spec_threshold": 0.99,
+      "direction": "min",
+      "numerator": 4712,
+      "denominator": 4712,
+      "rate": 1.0,
+      "sample_resolution": 0.00021222410865874363,
+      "resolvable": true,
+      "meets_threshold": true,
+      "passed": true
+    },
+    "unsupported_injected_claim_rate": {
+      "charter_item": 9,
+      "spec_threshold": 0.01,
+      "direction": "max",
+      "numerator": 0,
+      "denominator": 4712,
+      "rate": 0.0,
+      "sample_resolution": 0.00021222410865874363,
+      "resolvable": true,
+      "meets_threshold": true,
+      "passed": true
+    },
+    "stale_active_rate": {
+      "charter_item": 10,
+      "spec_threshold": 0.02,
+      "direction": "max",
+      "numerator": 34,
+      "denominator": 4712,
+      "rate": 0.007215619694397283,
+      "sample_resolution": 0.00021222410865874363,
+      "resolvable": true,
+      "meets_threshold": true,
+      "passed": true
+    }
+  },
+  "unresolvable_metrics": [],
+  "self_check": {
+    "ran": true,
+    "probes": [
+      {
+        "probe": "fabricated_value",
+        "metric": "unsupported_injected_claim_rate",
+        "rationale": "A claim asserting content absent from its evidence must be counted. The extractor copies event text, so unsupported rate is 0 by construction (measured 0/449) and this metric is otherwise untested.",
+        "injected_facets": 1,
+        "detected": true,
+        "passed": true
+      },
+      {
+        "probe": "stripped_evidence",
+        "metric": "evidence_attribution_coverage",
+        "rationale": "A claim whose evidence link is gone must drop coverage below 100%.",
+        "injected_facets": 1,
+        "detected": true,
+        "passed": true
+      },
+      {
+        "probe": "expired_horizon",
+        "metric": "stale_active_rate",
+        "rationale": "A 'today' claim still injected 60 days later must be counted stale.",
+        "injected_facets": 1,
+        "detected": true,
+        "passed": true
+      },
+      {
+        "probe": "fabricated_pattern",
+        "metric": "unsupported_injected_claim_rate",
+        "rationale": "Reflection is the only writer of non-verbatim claim values, so it is the one route by which #9 can genuinely fail. This probe forms a real pattern claim from a multi-session series, then fabricates its value. The corpus run cannot cover this: PersonaMem contexts are single-session, so no pattern clears the span requirement and #9 would report a pass over episodic claims alone.",
+        "injected_facets": 2,
+        "detected": true,
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  "notes": {
+    "unsupported_rate_is_structurally_low": "The deterministic extractor copies event text into claim values, so token-level support holds by construction (measured 0/449 on the PersonaMem corpus). Treat #9 as a regression guard against a future generative extractor, not as evidence that inference is grounded.",
+    "episodic_truncation": "Episodic values are cut at 280 chars mid-word; the trailing partial token is excluded from the support check because it appears in no event by construction (157/285 false positives without this rule)."
+  },
+  "passed": true,
+  "violations": [
+    {
+      "user_id": "grounding:1621543a17bd464f",
+      "query_id": "e6de60c5-51a2-4d1d-8dd1-1a7342a8ccd9",
+      "claim_id": "108c8ec9-3c03-562f-94dc-adb41609fc14",
+      "kind": "episodic",
+      "value": "User: After our last conversation, I've been really focused on expanding my financial knowledge. This commitment comes not just from a desire to manage my personal finances better, but also from a rea",
+      "evidence_ids": [
+        "1621543a17bd464f-47"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 3.375,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:1621543a17bd464f",
+      "query_id": "f0147ccb-bc31-4c48-a31b-b93cef0681ba",
+      "claim_id": "108c8ec9-3c03-562f-94dc-adb41609fc14",
+      "kind": "episodic",
+      "value": "User: After our last conversation, I've been really focused on expanding my financial knowledge. This commitment comes not just from a desire to manage my personal finances better, but also from a rea",
+      "evidence_ids": [
+        "1621543a17bd464f-47"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 3.375,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:1621543a17bd464f",
+      "query_id": "c93e738d-6c17-4e45-9a51-23c3b57b1c58",
+      "claim_id": "108c8ec9-3c03-562f-94dc-adb41609fc14",
+      "kind": "episodic",
+      "value": "User: After our last conversation, I've been really focused on expanding my financial knowledge. This commitment comes not just from a desire to manage my personal finances better, but also from a rea",
+      "evidence_ids": [
+        "1621543a17bd464f-47"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 3.375,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:1621543a17bd464f",
+      "query_id": "fc1efddc-3e19-41f1-b4a9-1312ed6d9057",
+      "claim_id": "108c8ec9-3c03-562f-94dc-adb41609fc14",
+      "kind": "episodic",
+      "value": "User: After our last conversation, I've been really focused on expanding my financial knowledge. This commitment comes not just from a desire to manage my personal finances better, but also from a rea",
+      "evidence_ids": [
+        "1621543a17bd464f-47"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 3.375,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:1621543a17bd464f",
+      "query_id": "d7d819ae-248f-4adb-b506-0c647d128940",
+      "claim_id": "108c8ec9-3c03-562f-94dc-adb41609fc14",
+      "kind": "episodic",
+      "value": "User: After our last conversation, I've been really focused on expanding my financial knowledge. This commitment comes not just from a desire to manage my personal finances better, but also from a rea",
+      "evidence_ids": [
+        "1621543a17bd464f-47"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 3.375,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:1621543a17bd464f",
+      "query_id": "e01a1ac3-9a98-4af2-83ef-8336edff80ab",
+      "claim_id": "108c8ec9-3c03-562f-94dc-adb41609fc14",
+      "kind": "episodic",
+      "value": "User: After our last conversation, I've been really focused on expanding my financial knowledge. This commitment comes not just from a desire to manage my personal finances better, but also from a rea",
+      "evidence_ids": [
+        "1621543a17bd464f-47"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 3.375,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:1621543a17bd464f",
+      "query_id": "e7c4589a-6e44-499b-b485-77e6cf018933",
+      "claim_id": "108c8ec9-3c03-562f-94dc-adb41609fc14",
+      "kind": "episodic",
+      "value": "User: After our last conversation, I've been really focused on expanding my financial knowledge. This commitment comes not just from a desire to manage my personal finances better, but also from a rea",
+      "evidence_ids": [
+        "1621543a17bd464f-47"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 3.375,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:1621543a17bd464f",
+      "query_id": "f4fb2664-6d59-4b36-ae63-546e1bbf7ee7",
+      "claim_id": "108c8ec9-3c03-562f-94dc-adb41609fc14",
+      "kind": "episodic",
+      "value": "User: After our last conversation, I've been really focused on expanding my financial knowledge. This commitment comes not just from a desire to manage my personal finances better, but also from a rea",
+      "evidence_ids": [
+        "1621543a17bd464f-47"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 3.375,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:1ee4be06b43a991e",
+      "query_id": "c2bcd7cb-2a3c-4318-bb92-7fc102da9b69",
+      "claim_id": "2c7bec91-d6e8-5132-942a-47e7957b6e05",
+      "kind": "episodic",
+      "value": "User: It felt comforting! The camaraderie really shifted my perspective on readathons entirely. I found myself not only connecting with others who shared the same love for fantasy but also felt a sens",
+      "evidence_ids": [
+        "1ee4be06b43a991e-73"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 1.875,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:373af9983d986370",
+      "query_id": "1837d1a9-0a9b-49ad-b65a-d862c631d523",
+      "claim_id": "7e779e5b-fcc6-53ff-b74a-6e460ad95ada",
+      "kind": "episodic",
+      "value": "User: I also decided to stop engaging in medical simulations due to the stress and anxiety they caused. Stepping away from activities like that is not only a personal decision but also an acknowledgme",
+      "evidence_ids": [
+        "373af9983d986370-37"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 4.875,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:3cc19ddf369632cd",
+      "query_id": "27b61c09-e5ab-4d00-b395-eea8ee619b70",
+      "claim_id": "07531a92-14fc-53d2-8f37-5d5f22b2787b",
+      "kind": "episodic",
+      "value": "User: I even explored fashion styling for dates, but I felt overwhelmed by the choice. The plethora of options available today can be both exhilarating and daunting, as it seems there are endless maga",
+      "evidence_ids": [
+        "3cc19ddf369632cd-41"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 5.166666666666667,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:3cc19ddf369632cd",
+      "query_id": "63891dab-5f6d-41ce-9909-9a2a9d7009c2",
+      "claim_id": "07531a92-14fc-53d2-8f37-5d5f22b2787b",
+      "kind": "episodic",
+      "value": "User: I even explored fashion styling for dates, but I felt overwhelmed by the choice. The plethora of options available today can be both exhilarating and daunting, as it seems there are endless maga",
+      "evidence_ids": [
+        "3cc19ddf369632cd-41"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 5.166666666666667,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:3cc19ddf369632cd",
+      "query_id": "950f4a03-fb59-428b-8c32-2b4a591cd29b",
+      "claim_id": "07531a92-14fc-53d2-8f37-5d5f22b2787b",
+      "kind": "episodic",
+      "value": "User: I even explored fashion styling for dates, but I felt overwhelmed by the choice. The plethora of options available today can be both exhilarating and daunting, as it seems there are endless maga",
+      "evidence_ids": [
+        "3cc19ddf369632cd-41"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 5.166666666666667,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:3cc19ddf369632cd",
+      "query_id": "4fdef36f-ebfb-4983-9a6a-9992985d4a47",
+      "claim_id": "07531a92-14fc-53d2-8f37-5d5f22b2787b",
+      "kind": "episodic",
+      "value": "User: I even explored fashion styling for dates, but I felt overwhelmed by the choice. The plethora of options available today can be both exhilarating and daunting, as it seems there are endless maga",
+      "evidence_ids": [
+        "3cc19ddf369632cd-41"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 5.166666666666667,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:3cc19ddf369632cd",
+      "query_id": "58257829-bdae-4d88-a71f-d866a179c243",
+      "claim_id": "07531a92-14fc-53d2-8f37-5d5f22b2787b",
+      "kind": "episodic",
+      "value": "User: I even explored fashion styling for dates, but I felt overwhelmed by the choice. The plethora of options available today can be both exhilarating and daunting, as it seems there are endless maga",
+      "evidence_ids": [
+        "3cc19ddf369632cd-41"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 5.166666666666667,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:3cc19ddf369632cd",
+      "query_id": "d3c87d0b-b8e9-4ad3-80dd-440da22899ec",
+      "claim_id": "07531a92-14fc-53d2-8f37-5d5f22b2787b",
+      "kind": "episodic",
+      "value": "User: I even explored fashion styling for dates, but I felt overwhelmed by the choice. The plethora of options available today can be both exhilarating and daunting, as it seems there are endless maga",
+      "evidence_ids": [
+        "3cc19ddf369632cd-41"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 5.166666666666667,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:3cc19ddf369632cd",
+      "query_id": "2c7661cc-4a9f-4520-932b-46ec48f122c5",
+      "claim_id": "07531a92-14fc-53d2-8f37-5d5f22b2787b",
+      "kind": "episodic",
+      "value": "User: I even explored fashion styling for dates, but I felt overwhelmed by the choice. The plethora of options available today can be both exhilarating and daunting, as it seems there are endless maga",
+      "evidence_ids": [
+        "3cc19ddf369632cd-41"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 5.166666666666667,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:4b3812acb9161991",
+      "query_id": "7929ddc3-cd4e-4090-8e8c-a3a796de0659",
+      "claim_id": "8fc05f02-246c-5e3b-9839-4c8a228255f0",
+      "kind": "episodic",
+      "value": "User: Recently, I dedicated some time to listening to a compelling series of financial podcasts, focusing particularly on investment strategies that can be employed in today's fluctuating market. Duri",
+      "evidence_ids": [
+        "4b3812acb9161991-92"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 2.5833333333333335,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:4b3812acb9161991",
+      "query_id": "46d52b93-3dea-4db6-a168-8cd9e2f7e37c",
+      "claim_id": "8fc05f02-246c-5e3b-9839-4c8a228255f0",
+      "kind": "episodic",
+      "value": "User: Recently, I dedicated some time to listening to a compelling series of financial podcasts, focusing particularly on investment strategies that can be employed in today's fluctuating market. Duri",
+      "evidence_ids": [
+        "4b3812acb9161991-92"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 2.5833333333333335,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:5c00a991550b5222",
+      "query_id": "23fb53b4-8baf-4da6-98a3-20e52ff2ab6e",
+      "claim_id": "7bf72cdd-a4f4-5542-acee-c8c2411fba17",
+      "kind": "episodic",
+      "value": "User: I even explored fashion styling for dates, but I felt overwhelmed by the choice. The plethora of options available today can be both exhilarating and daunting, as it seems there are endless maga",
+      "evidence_ids": [
+        "5c00a991550b5222-41"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 7.166666666666667,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:5c00a991550b5222",
+      "query_id": "d3cd52cc-ccdb-4131-813b-e49a7e1179a9",
+      "claim_id": "7bf72cdd-a4f4-5542-acee-c8c2411fba17",
+      "kind": "episodic",
+      "value": "User: I even explored fashion styling for dates, but I felt overwhelmed by the choice. The plethora of options available today can be both exhilarating and daunting, as it seems there are endless maga",
+      "evidence_ids": [
+        "5c00a991550b5222-41"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 7.166666666666667,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:5c00a991550b5222",
+      "query_id": "62993163-e56f-4366-9966-a4a9fe6e4ec1",
+      "claim_id": "7bf72cdd-a4f4-5542-acee-c8c2411fba17",
+      "kind": "episodic",
+      "value": "User: I even explored fashion styling for dates, but I felt overwhelmed by the choice. The plethora of options available today can be both exhilarating and daunting, as it seems there are endless maga",
+      "evidence_ids": [
+        "5c00a991550b5222-41"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 7.166666666666667,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:5c00a991550b5222",
+      "query_id": "8b43e847-78ca-408d-b90d-926c75b66c24",
+      "claim_id": "7bf72cdd-a4f4-5542-acee-c8c2411fba17",
+      "kind": "episodic",
+      "value": "User: I even explored fashion styling for dates, but I felt overwhelmed by the choice. The plethora of options available today can be both exhilarating and daunting, as it seems there are endless maga",
+      "evidence_ids": [
+        "5c00a991550b5222-41"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 7.166666666666667,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:5c00a991550b5222",
+      "query_id": "32cc4279-77fc-447f-95aa-b3a394d16ef3",
+      "claim_id": "7bf72cdd-a4f4-5542-acee-c8c2411fba17",
+      "kind": "episodic",
+      "value": "User: I even explored fashion styling for dates, but I felt overwhelmed by the choice. The plethora of options available today can be both exhilarating and daunting, as it seems there are endless maga",
+      "evidence_ids": [
+        "5c00a991550b5222-41"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 7.166666666666667,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:5c00a991550b5222",
+      "query_id": "ead3e803-ac45-4c5d-a76e-014f906ff0f6",
+      "claim_id": "7bf72cdd-a4f4-5542-acee-c8c2411fba17",
+      "kind": "episodic",
+      "value": "User: I even explored fashion styling for dates, but I felt overwhelmed by the choice. The plethora of options available today can be both exhilarating and daunting, as it seems there are endless maga",
+      "evidence_ids": [
+        "5c00a991550b5222-41"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 7.166666666666667,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:5c00a991550b5222",
+      "query_id": "02ef23df-c3ee-4ca4-9580-eec1144cf2e9",
+      "claim_id": "7bf72cdd-a4f4-5542-acee-c8c2411fba17",
+      "kind": "episodic",
+      "value": "User: I even explored fashion styling for dates, but I felt overwhelmed by the choice. The plethora of options available today can be both exhilarating and daunting, as it seems there are endless maga",
+      "evidence_ids": [
+        "5c00a991550b5222-41"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 7.166666666666667,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:5f9be905f1374d09",
+      "query_id": "4b803069-7679-411e-8310-d885e6ed1e7d",
+      "claim_id": "d586a218-e9fc-5b78-8668-721ced1182ad",
+      "kind": "episodic",
+      "value": "User: Just recently, I started a new book on financial literacy and investment strategies. It's really insightful. The book covers a variety of topics, including budgeting, saving, and the different t",
+      "evidence_ids": [
+        "5f9be905f1374d09-3"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 6.208333333333333,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:947ec42fcf5d327c",
+      "query_id": "7f7c4177-a11b-4a29-add6-b78ff733799c",
+      "claim_id": "4b6c31c2-556a-5086-8eb9-50687c0764f6",
+      "kind": "episodic",
+      "value": "User: I attended a webinar on travel insurance to feel more informed about choosing the right policies. In today's world, travel insurance has become increasingly important for travelers, especially w",
+      "evidence_ids": [
+        "947ec42fcf5d327c-100"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 2.25,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:947ec42fcf5d327c",
+      "query_id": "0178026c-bec6-4728-aae7-612b8b43ec50",
+      "claim_id": "4b6c31c2-556a-5086-8eb9-50687c0764f6",
+      "kind": "episodic",
+      "value": "User: I attended a webinar on travel insurance to feel more informed about choosing the right policies. In today's world, travel insurance has become increasingly important for travelers, especially w",
+      "evidence_ids": [
+        "947ec42fcf5d327c-100"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 2.25,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:947ec42fcf5d327c",
+      "query_id": "5e576cc9-d661-439a-aa8a-4390e4d17cad",
+      "claim_id": "4b6c31c2-556a-5086-8eb9-50687c0764f6",
+      "kind": "episodic",
+      "value": "User: I attended a webinar on travel insurance to feel more informed about choosing the right policies. In today's world, travel insurance has become increasingly important for travelers, especially w",
+      "evidence_ids": [
+        "947ec42fcf5d327c-100"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 2.25,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:97c532a381a07939",
+      "query_id": "8be28bb6-049f-4735-8957-a15234c138f4",
+      "claim_id": "4fd5d682-9926-5d70-9645-d650c1423a3c",
+      "kind": "episodic",
+      "value": "User: I just attended a community workshop on legal literacy, and I found it both engaging and impactful. The workshop focused on the importance of understanding our rights and responsibilities as cit",
+      "evidence_ids": [
+        "97c532a381a07939-44"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 5.791666666666667,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:a44f332994eedfff",
+      "query_id": "f7b31f4b-e088-4a2e-a505-1e3cd7426e9e",
+      "claim_id": "b663fdde-f667-595d-998a-3e24d3cb4468",
+      "kind": "episodic",
+      "value": "User: I'm really glad to be making environmentally conscious choices, as it has become so important in today's world where climate change and environmental degradation are pressing concerns. It feels ",
+      "evidence_ids": [
+        "a44f332994eedfff-83"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 3.7083333333333335,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:d4a1f9dcaab3b0eb",
+      "query_id": "78ebcdd3-c419-4777-be35-ab836f645b9e",
+      "claim_id": "458141e5-390d-52f7-929e-be9b46ab2444",
+      "kind": "episodic",
+      "value": "User: I just attended a community workshop on legal literacy, and I found it both engaging and impactful. The workshop focused on the importance of understanding our rights and responsibilities as cit",
+      "evidence_ids": [
+        "d4a1f9dcaab3b0eb-44"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 5.791666666666667,
+      "superseded_by_newer": false
+    },
+    {
+      "user_id": "grounding:f56dc82b80270d4a",
+      "query_id": "63f0c40f-a1c8-4e5d-af0a-37bc2b317185",
+      "claim_id": "4a68a2d1-7031-5455-8527-cd798b6ed97b",
+      "kind": "episodic",
+      "value": "User: I'm really glad to be making environmentally conscious choices, as it has become so important in today's world where climate change and environmental degradation are pressing concerns. It feels ",
+      "evidence_ids": [
+        "f56dc82b80270d4a-141"
+      ],
+      "has_evidence": true,
+      "evidence_resolves": true,
+      "unsupported_tokens": [],
+      "horizon_label": "today",
+      "horizon_days": 1,
+      "age_days": 4.041666666666667,
+      "superseded_by_newer": false
+    }
+  ]
+}

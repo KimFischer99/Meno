@@ -1,0 +1,26 @@
+{
+  "converter": "longmemeval -> meno external-corpus-v1",
+  "items_read": 500,
+  "sessions_emitted": 500,
+  "queries_emitted": 500,
+  "dropped_no_has_answer_flag": 0,
+  "dropped_question_ids": [],
+  "turns_skipped_unknown_role": 0,
+  "abstain_queries": 30,
+  "oracle_check": {
+    "items_where_haystack_equals_answer_sessions": 500,
+    "note": "A haystack identical to the answer set means the dataset variant carries no distractor sessions. Retrieval precision measured on it is an upper bound, not a deployable number."
+  },
+  "conversion_decisions": {
+    "one_question_is_one_session": "haystack sessions concatenated in date order under user_key=question_id; 'session' here means one user's whole history",
+    "timestamps_synthesized": "per-session date plus 1 minute(s) per turn; absolute times are not real, order is",
+    "abs_subset_is_abstain": "question_ids ending in _abs are LongMemEval's own abstention set (gold answer: information not enough); their has_answer flags mark near-miss evidence and are discarded",
+    "unflagged_questions_dropped": "non-abstain questions with no has_answer message are dropped, not relabeled abstain, to avoid manufacturing negatives"
+  },
+  "labels_are_dataset_provenance": "relevant_message_indices comes from the dataset's per-message has_answer flag, not from reading answers (Charter §3 rule 2)",
+  "source": {
+    "file": "longmemeval_oracle.json",
+    "sha256": "821a2034d219ab45846873dd14c14f12cfe7776e73527a483f9dac095d38620c",
+    "limit": 0
+  }
+}

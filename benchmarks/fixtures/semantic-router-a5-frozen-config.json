@@ -1,0 +1,43 @@
+{
+  "config_version": "semantic-router-a5-frozen-config-v1",
+  "freeze_revision": "a5-anchor-redesign-stable",
+  "frozen_from": {
+    "development_artifact": "artifacts/vps-stage4-a5-development-selection.json",
+    "development_artifact_sha256": "9be300a51f88f8589dfb2a8c8f200775861a61f6941a9e1ec3a62ff29b5c24ea",
+    "run_id": "7014f88f-d307-4aa4-bc02-738177c9e751",
+    "stable_runs": 3
+  },
+  "strategy": {
+    "variant": "top2_mean",
+    "strategy_version": "meno-prototype-ensemble-2.0.0",
+    "aggregation": "top2_mean",
+    "prototype_fixture": "benchmarks/fixtures/semantic-prototypes-a5-v2.json",
+    "prototype_sha256": "d9e97ec67b5688b44728a1b2bcf73cc39d7625ef1a7baf39b83862cae7a136dc",
+    "router_sha256": "12f1272123c930de1fc7fdb51908d5bc181e936ff7e288ffa8d07550a2d987fe",
+    "score_threshold": 0.475,
+    "margin_threshold": 0.005,
+    "threshold_search_allowed_after_freeze": false
+  },
+  "development_evidence": {
+    "v2_fixture_sha256": "908d9f21b184fc0ce9fe273be91890b0fc402ab34cf9cdaa1ca630eeba7305d7",
+    "a31_fixture_sha256": "7868c19ccbd09a7799ac8d0c220147242040223e17a81e9745bd76f748a2a635",
+    "case_count": 111,
+    "selected_recall_min_across_runs": 0.9285714285714286,
+    "selected_source_recall_min": {
+      "v2": 0.875,
+      "a31": 1.0
+    },
+    "false_merge_count": 0
+  },
+  "fresh_holdout_gate": {
+    "minimum_recall": 0.75,
+    "false_merge_count": 0,
+    "safety_all_correct": true,
+    "robustness_all_correct": true,
+    "answer_style_all_correct": true,
+    "minimum_provider_scored_count": 35,
+    "minimum_provider_scored_per_dimension": 4,
+    "holdout_runs_allowed": 1,
+    "on_failure": "NO-GO; the holdout must not be reused to claim GO"
+  }
+}

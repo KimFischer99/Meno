@@ -1,0 +1,32 @@
+/.env
+/.env.*
+!/.env.example
+# Committed configuration template. Contains only `replace-with-...` placeholders;
+# real values belong in a file outside the repository (see deploy/README.md).
+!deploy/.env.production.example
+Google_Embedding.txt
+.secrets/
+*.pem
+*.key
+*.log
+*.pid
+.venv/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+*.db
+*.sqlite3
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+.DS_Store
+artifacts/runtime/
+artifacts/benchmarks/raw/
+# Internal design and status documents, not published. Code comments cite
+# Meno_SPEC.md by section number as the source of the acceptance criteria; the
+# Gate Charter records per-gate measured status. Both stay local.
+/Meno_SPEC.md
+/Meno_v2.0_Gate_Charter.md

@@ -1,0 +1,185 @@
+{
+  "schema_version": "preference-calibration-v1",
+  "description": "Synthetic prospective labels for diagnosing whether preference mode probabilities are calibrated. Outcome labels are never ingested before scoring.",
+  "evidence_grade": "synthetic_diagnostic",
+  "ece_bins": 10,
+  "diagnostic_gate": {
+    "minimum_holdout_samples": 8,
+    "minimum_positive_labels": 4,
+    "minimum_negative_labels": 4,
+    "maximum_brier_score": 0.2,
+    "maximum_ece": 0.1,
+    "minimum_brier_improvement": 0.02,
+    "minimum_ece_improvement": 0.02
+  },
+  "cases": [
+    {
+      "case_id": "development-single-answer",
+      "split": "development",
+      "user_id": "cal-dev-single-answer",
+      "events": [{"event_id": "cal-dev-single-answer-1", "occurred_at": "2026-08-01T12:00:00Z", "text": "I prefer concise answers"}],
+      "expected_mode": "concise answers",
+      "mode_correct": true,
+      "label_source": "synthetic_future_feedback"
+    },
+    {
+      "case_id": "development-single-beverage",
+      "split": "development",
+      "user_id": "cal-dev-single-beverage",
+      "events": [{"event_id": "cal-dev-single-beverage-1", "occurred_at": "2026-08-01T12:01:00Z", "text": "I prefer tea"}],
+      "expected_mode": "tea",
+      "mode_correct": false,
+      "label_source": "synthetic_future_feedback"
+    },
+    {
+      "case_id": "development-single-language",
+      "split": "development",
+      "user_id": "cal-dev-single-language",
+      "events": [{"event_id": "cal-dev-single-language-1", "occurred_at": "2026-08-01T12:02:00Z", "text": "I prefer Python"}],
+      "expected_mode": "Python",
+      "mode_correct": true,
+      "label_source": "synthetic_future_feedback"
+    },
+    {
+      "case_id": "development-single-food",
+      "split": "development",
+      "user_id": "cal-dev-single-food",
+      "events": [{"event_id": "cal-dev-single-food-1", "occurred_at": "2026-08-01T12:03:00Z", "text": "I prefer sushi"}],
+      "expected_mode": "sushi",
+      "mode_correct": false,
+      "label_source": "synthetic_future_feedback"
+    },
+    {
+      "case_id": "development-drift-answer",
+      "split": "development",
+      "user_id": "cal-dev-drift-answer",
+      "events": [
+        {"event_id": "cal-dev-drift-answer-1", "occurred_at": "2026-01-01T12:00:00Z", "text": "I prefer terse answers"},
+        {"event_id": "cal-dev-drift-answer-2", "occurred_at": "2026-08-01T12:04:00Z", "text": "I prefer detailed answers now"}
+      ],
+      "expected_mode": "detailed answers",
+      "mode_correct": true,
+      "label_source": "synthetic_future_feedback"
+    },
+    {
+      "case_id": "development-drift-beverage",
+      "split": "development",
+      "user_id": "cal-dev-drift-beverage",
+      "events": [
+        {"event_id": "cal-dev-drift-beverage-1", "occurred_at": "2026-01-01T12:01:00Z", "text": "I prefer tea"},
+        {"event_id": "cal-dev-drift-beverage-2", "occurred_at": "2026-08-01T12:05:00Z", "text": "I prefer coffee now"}
+      ],
+      "expected_mode": "coffee",
+      "mode_correct": false,
+      "label_source": "synthetic_future_feedback"
+    },
+    {
+      "case_id": "development-drift-language",
+      "split": "development",
+      "user_id": "cal-dev-drift-language",
+      "events": [
+        {"event_id": "cal-dev-drift-language-1", "occurred_at": "2026-01-01T12:02:00Z", "text": "I prefer Python"},
+        {"event_id": "cal-dev-drift-language-2", "occurred_at": "2026-08-01T12:06:00Z", "text": "I prefer Rust now"}
+      ],
+      "expected_mode": "Rust",
+      "mode_correct": true,
+      "label_source": "synthetic_future_feedback"
+    },
+    {
+      "case_id": "development-drift-food",
+      "split": "development",
+      "user_id": "cal-dev-drift-food",
+      "events": [
+        {"event_id": "cal-dev-drift-food-1", "occurred_at": "2026-01-01T12:03:00Z", "text": "I prefer pizza"},
+        {"event_id": "cal-dev-drift-food-2", "occurred_at": "2026-08-01T12:07:00Z", "text": "I prefer sushi now"}
+      ],
+      "expected_mode": "sushi",
+      "mode_correct": false,
+      "label_source": "synthetic_future_feedback"
+    },
+    {
+      "case_id": "holdout-single-answer",
+      "split": "holdout",
+      "user_id": "cal-holdout-single-answer",
+      "events": [{"event_id": "cal-holdout-single-answer-1", "occurred_at": "2026-08-02T12:00:00Z", "text": "I prefer detailed answers"}],
+      "expected_mode": "detailed answers",
+      "mode_correct": true,
+      "label_source": "synthetic_future_feedback"
+    },
+    {
+      "case_id": "holdout-single-beverage",
+      "split": "holdout",
+      "user_id": "cal-holdout-single-beverage",
+      "events": [{"event_id": "cal-holdout-single-beverage-1", "occurred_at": "2026-08-02T12:01:00Z", "text": "I prefer coffee"}],
+      "expected_mode": "coffee",
+      "mode_correct": false,
+      "label_source": "synthetic_future_feedback"
+    },
+    {
+      "case_id": "holdout-single-language",
+      "split": "holdout",
+      "user_id": "cal-holdout-single-language",
+      "events": [{"event_id": "cal-holdout-single-language-1", "occurred_at": "2026-08-02T12:02:00Z", "text": "I prefer Rust"}],
+      "expected_mode": "Rust",
+      "mode_correct": true,
+      "label_source": "synthetic_future_feedback"
+    },
+    {
+      "case_id": "holdout-single-food",
+      "split": "holdout",
+      "user_id": "cal-holdout-single-food",
+      "events": [{"event_id": "cal-holdout-single-food-1", "occurred_at": "2026-08-02T12:03:00Z", "text": "I prefer pizza"}],
+      "expected_mode": "pizza",
+      "mode_correct": false,
+      "label_source": "synthetic_future_feedback"
+    },
+    {
+      "case_id": "holdout-drift-answer",
+      "split": "holdout",
+      "user_id": "cal-holdout-drift-answer",
+      "events": [
+        {"event_id": "cal-holdout-drift-answer-1", "occurred_at": "2026-01-02T12:00:00Z", "text": "I prefer concise answers"},
+        {"event_id": "cal-holdout-drift-answer-2", "occurred_at": "2026-08-02T12:04:00Z", "text": "I prefer verbose answers now"}
+      ],
+      "expected_mode": "verbose answers",
+      "mode_correct": true,
+      "label_source": "synthetic_future_feedback"
+    },
+    {
+      "case_id": "holdout-drift-beverage",
+      "split": "holdout",
+      "user_id": "cal-holdout-drift-beverage",
+      "events": [
+        {"event_id": "cal-holdout-drift-beverage-1", "occurred_at": "2026-01-02T12:01:00Z", "text": "I prefer coffee"},
+        {"event_id": "cal-holdout-drift-beverage-2", "occurred_at": "2026-08-02T12:05:00Z", "text": "I prefer tea now"}
+      ],
+      "expected_mode": "tea",
+      "mode_correct": false,
+      "label_source": "synthetic_future_feedback"
+    },
+    {
+      "case_id": "holdout-drift-language",
+      "split": "holdout",
+      "user_id": "cal-holdout-drift-language",
+      "events": [
+        {"event_id": "cal-holdout-drift-language-1", "occurred_at": "2026-01-02T12:02:00Z", "text": "I prefer Rust"},
+        {"event_id": "cal-holdout-drift-language-2", "occurred_at": "2026-08-02T12:06:00Z", "text": "I prefer Python now"}
+      ],
+      "expected_mode": "Python",
+      "mode_correct": true,
+      "label_source": "synthetic_future_feedback"
+    },
+    {
+      "case_id": "holdout-drift-food",
+      "split": "holdout",
+      "user_id": "cal-holdout-drift-food",
+      "events": [
+        {"event_id": "cal-holdout-drift-food-1", "occurred_at": "2026-01-02T12:03:00Z", "text": "I prefer sushi"},
+        {"event_id": "cal-holdout-drift-food-2", "occurred_at": "2026-08-02T12:07:00Z", "text": "I prefer pizza now"}
+      ],
+      "expected_mode": "pizza",
+      "mode_correct": false,
+      "label_source": "synthetic_future_feedback"
+    }
+  ]
+}

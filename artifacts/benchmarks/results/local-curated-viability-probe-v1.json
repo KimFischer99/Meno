@@ -1,0 +1,87 @@
+{
+  "probe": "Meno curated retrieval set viability",
+  "gate_charter_items": [
+    13,
+    14
+  ],
+  "schema_version": "curated-viability-probe-v1",
+  "answer_model_calls": 0,
+  "embedding_provider_calls": 0,
+  "seed": 0,
+  "provenance": {
+    "contexts_file": "shared_contexts_32k.jsonl",
+    "contexts_sha256": "217247ebfec9e8442fc53570c795ab69f21aad08745f7de78d9beab51b122d4a",
+    "questions_file": "questions_32k.csv",
+    "questions_sha256": "cccd34cf53e0bc4d9536c04cff5ca045156d9a4e227e83327112482840bbc93c"
+  },
+  "label_quality": {
+    "questions_total": 589,
+    "reference_resolved": 589,
+    "resolution_rate": 1.0,
+    "letter_count_inconsistent": 0,
+    "missing_context": 0,
+    "questions_without_decisive_tokens": 94,
+    "questions_scored": 495,
+    "reference_role_distribution": {
+      "assistant": 316,
+      "system": 1,
+      "user": 272
+    },
+    "random_baseline_decisive_recall": 0.07422668892100412,
+    "windows": {
+      "radius_0": {
+        "messages_per_label": 1,
+        "mean_decisive_recall": 0.16094516839669581,
+        "beats_random_baseline": 269,
+        "beats_random_share": 0.5434343434343434,
+        "usable_as_label": false
+      },
+      "radius_1": {
+        "messages_per_label": 3,
+        "mean_decisive_recall": 0.31547776902804503,
+        "beats_random_baseline": 397,
+        "beats_random_share": 0.802020202020202,
+        "usable_as_label": false
+      },
+      "radius_2": {
+        "messages_per_label": 5,
+        "mean_decisive_recall": 0.396088615980504,
+        "beats_random_baseline": 429,
+        "beats_random_share": 0.8666666666666667,
+        "usable_as_label": false
+      },
+      "radius_4": {
+        "messages_per_label": 9,
+        "mean_decisive_recall": 0.4859030263209049,
+        "beats_random_baseline": 453,
+        "beats_random_share": 0.9151515151515152,
+        "usable_as_label": false
+      }
+    },
+    "query_signal_decisive_recall": 0.0870700412696458,
+    "known_query_signal_reference": 0.087
+  },
+  "annotation_cost": {
+    "recall_target": 0.9,
+    "resolvable_delta": 0.05,
+    "required_labeled_queries": 139,
+    "rationale": "Separating Recall@10 0.9 from 0.85 at 95% confidence needs 139 labeled queries. Fewer cannot evidence the SPEC threshold, the same sample-resolution rule the grounding lane applies.",
+    "best_metadata_window_recall": 0.4859030263209049,
+    "best_metadata_window_messages": 9,
+    "metadata_can_replace_annotation": false
+  },
+  "verdict": {
+    "query_signal_at_trap_level": true,
+    "metadata_usable_as_gold_labels": false,
+    "metadata_beats_random": true,
+    "annotation_required": true,
+    "reasons": [
+      "Decisive tokens appear in the query for only 0.0871 of questions -- indistinguishable from the 0.087 that made PersonaMem unusable as a gate (Charter §0). Charter §3.3 says to stop here: this is the same corpus, so a curated set over it inherits the same ceiling no matter how the labels are produced.",
+      "Reference metadata localizes evidence better than random (0.4859 vs 0.0742) but below the 0.6 needed to stand in for a label, and only at a 9-message window -- that labels a region, not a claim. Recall@10 built on it would track label noise more than retrieval quality."
+    ],
+    "recommendation": "CORPUS_UNSUITABLE_QUERY_SIGNAL",
+    "next_step": "Source a corpus whose questions name what they ask about, then re-run this probe before annotating. Spending the annotation budget on this corpus would repeat the four interventions in Charter §0, which each improved their mechanism while the score stayed flat.",
+    "decision_is_not_engineering": "Whether to spend 139 manual annotations is a cost decision, not an engineering one. This probe supplies the inputs; it deliberately does not build a set or emit labels."
+  },
+  "scope": "A pre-check, not a gate. It emits no relevance labels and computes no Recall@10 or nDCG@10; #13 and #14 stay BUILD until a curated set with admissible labels exists."
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "real-feedback-calibration-gate-v1",
+  "ece_bins": 10,
+  "development_fraction": 0.7,
+  "data_readiness": {
+    "minimum_total_samples": 100,
+    "minimum_holdout_samples": 30,
+    "minimum_holdout_positive_labels": 10,
+    "minimum_holdout_negative_labels": 10,
+    "minimum_pairing_coverage": 0.99
+  },
+  "quality_gate": {
+    "maximum_brier_score": 0.2,
+    "maximum_ece": 0.1,
+    "minimum_brier_improvement": 0.02,
+    "minimum_ece_improvement": 0.02
+  }
+}

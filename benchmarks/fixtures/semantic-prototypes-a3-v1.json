@@ -1,0 +1,216 @@
+{
+  "prototype_version": "semantic-prototypes-a3-v1",
+  "basis": "semantic-normalization-v2-development-only",
+  "dimensions": {
+    "answer_style": [
+      {
+        "id": "topic",
+        "role": "topic",
+        "polarity": "neutral",
+        "en": "writing and answer style, including prose, wording, verbosity, concision, structure, and organization",
+        "zh": "写作与回答风格，包括文风、措辞、详略、简洁度、结构和组织方式"
+      },
+      {
+        "id": "affirmed",
+        "role": "polarity",
+        "polarity": "affirmed",
+        "en": "I prefer concise, direct answers with the main point first",
+        "zh": "我偏好简洁直接、先讲重点的回答"
+      },
+      {
+        "id": "negated",
+        "role": "polarity",
+        "polarity": "negated",
+        "en": "I no longer want meandering, verbose, or roundabout prose and wording",
+        "zh": "我不再想要绕圈、冗长或啰嗦的文风和措辞"
+      },
+      {
+        "id": "contradiction",
+        "role": "polarity",
+        "polarity": "contradiction",
+        "en": "I changed my answer style from detailed explanations to concise answers",
+        "zh": "我改变了回答风格，从详细解释转为简洁回答"
+      }
+    ],
+    "beverage": [
+      {
+        "id": "topic",
+        "role": "topic",
+        "polarity": "neutral",
+        "en": "beverage or drink preference",
+        "zh": "饮品或饮料偏好"
+      },
+      {
+        "id": "affirmed",
+        "role": "polarity",
+        "polarity": "affirmed",
+        "en": "I prefer choosing a beverage to drink",
+        "zh": "我偏好选择饮用的饮品"
+      },
+      {
+        "id": "negated",
+        "role": "polarity",
+        "polarity": "negated",
+        "en": "I no longer choose or consume a beverage",
+        "zh": "我不再选择或饮用某种饮品"
+      },
+      {
+        "id": "contradiction",
+        "role": "polarity",
+        "polarity": "contradiction",
+        "en": "I changed my beverage preference from one drink to another",
+        "zh": "我把饮品偏好从一种饮料改成另一种"
+      }
+    ],
+    "programming_language": [
+      {
+        "id": "topic",
+        "role": "topic",
+        "polarity": "neutral",
+        "en": "programming language, source code, and software development",
+        "zh": "编程语言、源代码与软件开发"
+      },
+      {
+        "id": "affirmed",
+        "role": "polarity",
+        "polarity": "affirmed",
+        "en": "I prefer using a programming language to write and run software",
+        "zh": "我偏好使用某种编程语言编写和运行软件"
+      },
+      {
+        "id": "negated",
+        "role": "polarity",
+        "polarity": "negated",
+        "en": "I no longer use or prefer a programming language for code",
+        "zh": "我不再使用或偏好某种编程语言来写代码"
+      },
+      {
+        "id": "contradiction",
+        "role": "polarity",
+        "polarity": "contradiction",
+        "en": "I switched from one programming language to another for coding",
+        "zh": "我为了编程从一种编程语言切换到另一种"
+      }
+    ],
+    "music": [
+      {
+        "id": "topic",
+        "role": "topic",
+        "polarity": "neutral",
+        "en": "music listening, composition, and performance preference",
+        "zh": "音乐聆听、创作与演奏偏好"
+      },
+      {
+        "id": "affirmed",
+        "role": "polarity",
+        "polarity": "affirmed",
+        "en": "I prefer listening to or performing a kind of music",
+        "zh": "我偏好聆听或演奏某类音乐"
+      },
+      {
+        "id": "negated",
+        "role": "polarity",
+        "polarity": "negated",
+        "en": "I no longer want to listen to or perform a kind of music",
+        "zh": "我不再想聆听或演奏某类音乐"
+      },
+      {
+        "id": "contradiction",
+        "role": "polarity",
+        "polarity": "contradiction",
+        "en": "I changed my music preference from one style to another",
+        "zh": "我把音乐偏好从一种风格改成另一种"
+      }
+    ],
+    "food": [
+      {
+        "id": "topic",
+        "role": "topic",
+        "polarity": "neutral",
+        "en": "food, dish, and eating preference",
+        "zh": "食物、菜肴与进食偏好"
+      },
+      {
+        "id": "affirmed",
+        "role": "polarity",
+        "polarity": "affirmed",
+        "en": "I prefer eating a particular food or dish",
+        "zh": "我偏好吃某种食物或菜肴"
+      },
+      {
+        "id": "negated",
+        "role": "polarity",
+        "polarity": "negated",
+        "en": "I no longer want to eat or choose a food",
+        "zh": "我不再想吃或选择某种食物"
+      },
+      {
+        "id": "contradiction",
+        "role": "polarity",
+        "polarity": "contradiction",
+        "en": "I changed my food preference from one dish to another",
+        "zh": "我把食物偏好从一道菜改成另一道"
+      }
+    ],
+    "color": [
+      {
+        "id": "topic",
+        "role": "topic",
+        "polarity": "neutral",
+        "en": "color, hue, tint, and visual design preference",
+        "zh": "颜色、色调、色泽与视觉设计偏好"
+      },
+      {
+        "id": "affirmed",
+        "role": "polarity",
+        "polarity": "affirmed",
+        "en": "I prefer choosing a color for appearance or design",
+        "zh": "我偏好为外观或设计选择一种颜色"
+      },
+      {
+        "id": "negated",
+        "role": "polarity",
+        "polarity": "negated",
+        "en": "I no longer want or use a color in the design",
+        "zh": "我不再想要或使用某种设计颜色"
+      },
+      {
+        "id": "contradiction",
+        "role": "polarity",
+        "polarity": "contradiction",
+        "en": "I changed my color preference from one hue to another",
+        "zh": "我把颜色偏好从一种色调改成另一种"
+      }
+    ],
+    "sport": [
+      {
+        "id": "topic",
+        "role": "topic",
+        "polarity": "neutral",
+        "en": "sport, exercise, and physical activity preference",
+        "zh": "运动、锻炼与体育活动偏好"
+      },
+      {
+        "id": "affirmed",
+        "role": "polarity",
+        "polarity": "affirmed",
+        "en": "I prefer doing a sport or training activity",
+        "zh": "我偏好进行某项运动或训练活动"
+      },
+      {
+        "id": "negated",
+        "role": "polarity",
+        "polarity": "negated",
+        "en": "I quit or avoid a sport or physical activity",
+        "zh": "我停止或回避某项运动或体育活动"
+      },
+      {
+        "id": "contradiction",
+        "role": "polarity",
+        "polarity": "contradiction",
+        "en": "I changed my sport preference from one activity to another",
+        "zh": "我把运动偏好从一项活动改成另一项"
+      }
+    ]
+  }
+}

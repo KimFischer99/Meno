@@ -1,0 +1,65 @@
+{
+  "probe": "Meno evidence discriminability",
+  "schema_version": "discriminability-probe-v1",
+  "answer_model_calls": 0,
+  "budget": 12,
+  "interpretation": "High oracle_blind_jaccard means the query identifies the same evidence the answer key does, so better selection has headroom. Low jaccard with high oracle_decisive_recall means the ceiling is unreachable from the query alone.",
+  "by_question_type": {
+    "generalizing_to_new_scenarios": {
+      "questions": 57,
+      "oracle_blind_jaccard": 0.10300068874078268,
+      "oracle_decisive_recall": 0.5304457088531546,
+      "blind_decisive_recall": 0.2085988027558659,
+      "query_signal": 0.011473119250600478
+    },
+    "provide_preference_aligned_recommendations": {
+      "questions": 54,
+      "oracle_blind_jaccard": 0.0979537116836888,
+      "oracle_decisive_recall": 0.39545860708600744,
+      "blind_decisive_recall": 0.18261540280214905,
+      "query_signal": 0.014653904269487344
+    },
+    "recall_user_shared_facts": {
+      "questions": 105,
+      "oracle_blind_jaccard": 0.13079863219124416,
+      "oracle_decisive_recall": 0.596582795511367,
+      "blind_decisive_recall": 0.2994873909159623,
+      "query_signal": 0.026108018965161822
+    },
+    "recalling_facts_mentioned_by_the_user": {
+      "questions": 17,
+      "oracle_blind_jaccard": 0.12969694638829113,
+      "oracle_decisive_recall": 0.5905777618965474,
+      "blind_decisive_recall": 0.29015393840820786,
+      "query_signal": 0.023230201171377644
+    },
+    "recalling_the_reasons_behind_previous_updates": {
+      "questions": 99,
+      "oracle_blind_jaccard": 0.12516078794422875,
+      "oracle_decisive_recall": 0.4869409592953697,
+      "blind_decisive_recall": 0.2547911097642009,
+      "query_signal": 0.21698178908089832
+    },
+    "suggest_new_ideas": {
+      "questions": 93,
+      "oracle_blind_jaccard": 0.10373862745605567,
+      "oracle_decisive_recall": 0.5625990880387447,
+      "blind_decisive_recall": 0.20669547615041298,
+      "query_signal": 0.04487539420218242
+    },
+    "track_full_preference_evolution": {
+      "questions": 70,
+      "oracle_blind_jaccard": 0.11736212354715134,
+      "oracle_decisive_recall": 0.5091978391943359,
+      "blind_decisive_recall": 0.2327383804210232,
+      "query_signal": 0.18376468013672603
+    }
+  },
+  "overall": {
+    "questions": 495,
+    "oracle_blind_jaccard": 0.11586505690104608,
+    "oracle_decisive_recall": 0.526149302160924,
+    "blind_decisive_recall": 0.2401390753245089,
+    "query_signal": 0.0870700412696458
+  }
+}

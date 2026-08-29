@@ -1,0 +1,70 @@
+{
+  "screen": "HaluMem label-source viability",
+  "schema_version": "halumem-label-source-screen-v1",
+  "requirements_document": "MENO_DATA_REQUIREMENTS.md",
+  "answer_model_calls": 0,
+  "embedding_provider_calls": 0,
+  "corpus": {
+    "users": 20,
+    "messages": 60146,
+    "memory_points": 14948,
+    "questions": 3467,
+    "questions_without_evidence": 828,
+    "question_types": {
+      "Memory Boundary": 828,
+      "Memory Conflict": 769,
+      "Basic Fact Recall": 746,
+      "Generalization & Application": 746,
+      "Multi-hop Inference": 198,
+      "Dynamic Update": 180
+    },
+    "evidence_item_types": {
+      "dict": 4651
+    },
+    "abstain_candidate_share": 0.23882319007787714
+  },
+  "dataset_pointer": {
+    "field": "event_source",
+    "memory_points_with_field": 1727,
+    "distinct_values": {
+      "2": 1130,
+      "0": 285,
+      "1": 238,
+      "3": 68,
+      "62": 6
+    },
+    "usable_as_message_index": false
+  },
+  "text_matching_fallback": {
+    "evidence_items_scored": 4651,
+    "mean_best_overlap": 0.4591952993420931,
+    "median_best_overlap": 0.4375,
+    "verbatim_matches": 143,
+    "verbatim_share": 0.030746076112663945,
+    "matching_is_recognizable": false,
+    "ambiguous_top1_ties_top2": 1615,
+    "ambiguous_share": 0.34723715330036553,
+    "clear_by_margin": 1503,
+    "clear_share": 0.32315631047086646,
+    "median_margin": 0.08333333333333337,
+    "clear_margin_threshold": 0.15,
+    "max_tolerable_ambiguity": 0.1
+  },
+  "verdict": {
+    "label_source_usable": false,
+    "recommendation": "CORPUS_UNSUITABLE_NO_LABEL_SOURCE",
+    "reasons": [
+      "`event_source` cannot serve as the message pointer: present on 1727/14948 memory points with 5 distinct value(s) {'2': 1130, '0': 285, '1': 238, '3': 68, '62': 6}.",
+      "Text matching is ambiguous for 1615/4651 evidence items (34.7%): the best-matching user message ties with the runner-up, so the resulting index would be the matcher's choice rather than the dataset's. Charter §3 rule 2 excludes screener-invented labels.",
+      "Only 143/4651 summaries overlap a single user message at >=0.8; `memory_content` is a third-person rewrite of first-person dialogue, so overlap is low even when the match is right. With recognition this weak, a clear top-1 margin is not evidence that the right message was found."
+    ],
+    "next_step": "Do not convert. The contract needs message indices and this dataset only supplies rewritten summaries; any index would be authored by the screener, which Charter §3 rule 2 excludes. Query signal is deliberately not measured -- it would be measured against invented labels."
+  },
+  "scope": "Label-source viability only. Says nothing about HaluMem's fitness for its own purpose (memory hallucination), only that it cannot supply Meno's Recall@10 gold labels.",
+  "license_note": "HaluMem is CC BY-NC-ND 4.0 and is not redistributed here.",
+  "provenance": {
+    "file": "HaluMem-Medium.jsonl",
+    "sha256": "486fbc130a5c8781a2af27ffa508a1d7855245137aa449c193ac4d29c45634e7",
+    "users_read": 20
+  }
+}

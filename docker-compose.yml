@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: postgres:16.10-bookworm
+    environment:
+      POSTGRES_DB: meno
+      POSTGRES_USER: meno
+      POSTGRES_PASSWORD: ${MENO_POSTGRES_PASSWORD:?set MENO_POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meno -d meno"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - meno-postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:v1.19.0
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/6333'"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "127.0.0.1:6333:6333"
+    volumes:
+      - meno-qdrant:/qdrant/storage
+    restart: unless-stopped
+
+volumes:
+  meno-postgres:
+  meno-qdrant:

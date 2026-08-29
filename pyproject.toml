@@ -1,0 +1,58 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "meno-memory"
+version = "2.0.0"
+description = "Evidence-backed personal agent memory sidecar"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+keywords = ["agent-memory", "llm", "personalization", "provenance", "sidecar"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Libraries :: Application Frameworks",
+]
+dependencies = [
+  "fastapi>=0.116,<1",
+  "httpx>=0.28,<1",
+  "pydantic>=2.10,<3",
+  "qdrant-client>=1.15,<2",
+  "sqlalchemy>=2.0.38,<3",
+  "psycopg[binary]>=3.2,<4",
+  "uvicorn[standard]>=0.34,<1",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.3,<9",
+  "pytest-cov>=6,<7",
+  "ruff>=0.12,<1",
+]
+
+[project.scripts]
+meno = "meno.cli:main"
+
+[project.entry-points."hermes_agent.memory_providers"]
+meno = "meno.hermes_plugin:register"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/meno"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"benchmarks/fixtures/semantic-router-phaseb-frozen-config.json" = "meno/data/semantic-router-phaseb-frozen-config.json"
+"benchmarks/fixtures/semantic-prototypes-a5-v2.json" = "meno/data/semantic-prototypes-a5-v2.json"
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

@@ -1,0 +1,1107 @@
+{
+  "benchmark": "Meno semantic policy router A3.1 provider-scored fresh holdout",
+  "mode": "external-provider-fresh-holdout-read-only",
+  "run_id": "2ca272c4-1fba-4d5d-bca7-5ac574c1c53b",
+  "created_at": "2026-08-21T04:55:32.913641+00:00",
+  "host": "redacted",
+  "git_head": null,
+  "command": [
+    "meno-stage3/benchmarks/run_semantic_router_a31_holdout.py",
+    "--expected-manifest-sha256",
+    "359bce87535d7b6117b042529e081fef8a9927f744b069280ac712c4402d2c36",
+    "--output",
+    "artifacts/vps-stage4-a31-provider-holdout.json"
+  ],
+  "manifest": {
+    "version": "semantic-router-a31-evaluation-manifest-v1",
+    "sha256": "359bce87535d7b6117b042529e081fef8a9927f744b069280ac712c4402d2c36",
+    "out_of_band_sha_required": true
+  },
+  "holdout": {
+    "fixture_version": "semantic-normalization-v4-provider-holdout",
+    "fixture_sha256": "7868c19ccbd09a7799ac8d0c220147242040223e17a81e9745bd76f748a2a635",
+    "case_count": 49,
+    "threshold_search_performed": false
+  },
+  "frozen_config": {
+    "version": "semantic-router-a3-frozen-v1",
+    "freeze_revision": "a3.1-provider-scored",
+    "sha256": "47e621e2b263b75b2e542e62154fd330a64cfb00e32e1652bc4b4b940b243387",
+    "aggregation": "top2_mean",
+    "score_threshold": 0.425,
+    "margin_threshold": 0.0
+  },
+  "prototypes": {
+    "version": "semantic-prototypes-a3-v1",
+    "sha256": "8e7a8e2e1b2c2f608d72c78289236e2883303039b5957bba343403f27fcd8fbe",
+    "dimensions": {
+      "answer_style": [
+        {
+          "id": "topic",
+          "role": "topic",
+          "polarity": "neutral"
+        },
+        {
+          "id": "affirmed",
+          "role": "polarity",
+          "polarity": "affirmed"
+        },
+        {
+          "id": "negated",
+          "role": "polarity",
+          "polarity": "negated"
+        },
+        {
+          "id": "contradiction",
+          "role": "polarity",
+          "polarity": "contradiction"
+        }
+      ],
+      "beverage": [
+        {
+          "id": "topic",
+          "role": "topic",
+          "polarity": "neutral"
+        },
+        {
+          "id": "affirmed",
+          "role": "polarity",
+          "polarity": "affirmed"
+        },
+        {
+          "id": "negated",
+          "role": "polarity",
+          "polarity": "negated"
+        },
+        {
+          "id": "contradiction",
+          "role": "polarity",
+          "polarity": "contradiction"
+        }
+      ],
+      "color": [
+        {
+          "id": "topic",
+          "role": "topic",
+          "polarity": "neutral"
+        },
+        {
+          "id": "affirmed",
+          "role": "polarity",
+          "polarity": "affirmed"
+        },
+        {
+          "id": "negated",
+          "role": "polarity",
+          "polarity": "negated"
+        },
+        {
+          "id": "contradiction",
+          "role": "polarity",
+          "polarity": "contradiction"
+        }
+      ],
+      "food": [
+        {
+          "id": "topic",
+          "role": "topic",
+          "polarity": "neutral"
+        },
+        {
+          "id": "affirmed",
+          "role": "polarity",
+          "polarity": "affirmed"
+        },
+        {
+          "id": "negated",
+          "role": "polarity",
+          "polarity": "negated"
+        },
+        {
+          "id": "contradiction",
+          "role": "polarity",
+          "polarity": "contradiction"
+        }
+      ],
+      "music": [
+        {
+          "id": "topic",
+          "role": "topic",
+          "polarity": "neutral"
+        },
+        {
+          "id": "affirmed",
+          "role": "polarity",
+          "polarity": "affirmed"
+        },
+        {
+          "id": "negated",
+          "role": "polarity",
+          "polarity": "negated"
+        },
+        {
+          "id": "contradiction",
+          "role": "polarity",
+          "polarity": "contradiction"
+        }
+      ],
+      "programming_language": [
+        {
+          "id": "topic",
+          "role": "topic",
+          "polarity": "neutral"
+        },
+        {
+          "id": "affirmed",
+          "role": "polarity",
+          "polarity": "affirmed"
+        },
+        {
+          "id": "negated",
+          "role": "polarity",
+          "polarity": "negated"
+        },
+        {
+          "id": "contradiction",
+          "role": "polarity",
+          "polarity": "contradiction"
+        }
+      ],
+      "sport": [
+        {
+          "id": "topic",
+          "role": "topic",
+          "polarity": "neutral"
+        },
+        {
+          "id": "affirmed",
+          "role": "polarity",
+          "polarity": "affirmed"
+        },
+        {
+          "id": "negated",
+          "role": "polarity",
+          "polarity": "negated"
+        },
+        {
+          "id": "contradiction",
+          "role": "polarity",
+          "polarity": "contradiction"
+        }
+      ]
+    },
+    "anchor_count": 28
+  },
+  "source": {
+    "config_sha256": "47e621e2b263b75b2e542e62154fd330a64cfb00e32e1652bc4b4b940b243387",
+    "config_module_sha256": "678f991ec6b435729801eb05e8324d920443eb2da863ca6a697c5d486d505119",
+    "development_fixture_sha256": "908d9f21b184fc0ce9fe273be91890b0fc402ab34cf9cdaa1ca630eeba7305d7",
+    "development_runner_sha256": "1a3230b85f585e04b2a3ca26c3036a54746df6d33aa2e72f02b9252c772af118",
+    "extractor_sha256": "78f35d436b6d3a5040ce45010fed6993a90e880ec835cd9ba820d368192c256a",
+    "holdout_base_runner_sha256": "5194659212753801064624bf768c1a2ea33f2187ca3cb314c0e2cc017eb5b1b1",
+    "holdout_fixture_sha256": "7868c19ccbd09a7799ac8d0c220147242040223e17a81e9745bd76f748a2a635",
+    "holdout_runner_sha256": "2bc474847fc9c7e41639c2c34b20f48a83aee51766dd424e98aa49422312429e",
+    "prototype_sha256": "8e7a8e2e1b2c2f608d72c78289236e2883303039b5957bba343403f27fcd8fbe",
+    "router_sha256": "dd1fe5f08c91779c08849f508d0abc2febf02c4319dbc2d353a3277840a326bf",
+    "shadow_runner_sha256": "8539441df410adda8e3125865f1615e031597467474e83b4fb2bbe6fb755b24a",
+    "vector_sha256": "400d3c70f065513d93c6dbaa1628a1c4e831e8d915f4969dac80fe5e4e920bdf",
+    "strategy_version": "meno-prototype-ensemble-2.0.0",
+    "router_version": "meno-policy-router-2.0.0"
+  },
+  "runtime": {
+    "python": "3.12.3",
+    "platform": "Linux-6.17.0-1021-azure-x86_64-with-glibc2.39",
+    "packages": {
+      "meno-memory": "1.0.0",
+      "httpx": "0.28.1",
+      "pydantic": "2.13.4",
+      "qdrant-client": "1.19.0",
+      "sqlalchemy": "2.0.52"
+    }
+  },
+  "service_config": {
+    "environment": "test",
+    "extractor_version": "meno-extractor-2.0.0",
+    "embedding_provider": "siliconflow",
+    "embedding_model": "BAAI/bge-m3",
+    "embedding_dimension": 1024,
+    "embedding_projection_version": "BAAI-bge-m3-1024-v1",
+    "embedding_endpoint": "https://api.siliconflow.cn/v1"
+  },
+  "provider_policy": {
+    "candidate_count": 49,
+    "provider_scored_count": 47,
+    "provider_scored_by_dimension": {
+      "answer_style": 7,
+      "beverage": 6,
+      "color": 7,
+      "food": 6,
+      "music": 6,
+      "programming_language": 8,
+      "sport": 7
+    },
+    "provider_score_returned_count": 47,
+    "provider_score_returned_by_dimension": {
+      "answer_style": 7,
+      "beverage": 6,
+      "color": 7,
+      "food": 6,
+      "music": 6,
+      "programming_language": 8,
+      "sport": 7
+    },
+    "runtime_provider_coverage_passed": true,
+    "deterministic_bypass_count": 0,
+    "sensitive_blocked_count": 1,
+    "injection_blocked_count": 1,
+    "raw_text_persisted": false
+  },
+  "metrics": {
+    "case_count": 49,
+    "positive_count": 36,
+    "correct_count": 46,
+    "accuracy": 0.9387755102040817,
+    "precision": 0.9714285714285714,
+    "recall": 0.9444444444444444,
+    "false_merge_count": 1,
+    "false_merge_ids": [
+      "a31-paraphrase-en-as"
+    ],
+    "missed_merge_count": 2,
+    "missed_merge_ids": [
+      "a31-paraphrase-en-as",
+      "a31-contradiction-as"
+    ],
+    "category_metrics": {
+      "ambiguous_semantic_key": {
+        "count": 1,
+        "correct": 1,
+        "accuracy": 1.0
+      },
+      "contradiction": {
+        "count": 7,
+        "correct": 6,
+        "accuracy": 0.8571428571428571
+      },
+      "cross_channel_filter": {
+        "count": 1,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "cross_user_filter": {
+        "count": 1,
+        "correct": 1,
+        "accuracy": 1.0
+      },
+      "entity_collision": {
+        "count": 1,
+        "correct": 1,
+        "accuracy": 1.0
+      },
+      "evolution": {
+        "count": 7,
+        "correct": 7,
+        "accuracy": 1.0
+      },
+      "explicit_feedback_protected": {
+        "count": 1,
+        "correct": 1,
+        "accuracy": 1.0
+      },
+      "inactive_reference_filter": {
+        "count": 1,
+        "correct": 1,
+        "accuracy": 1.0
+      },
+      "injection_candidate": {
+        "count": 1,
+        "correct": 1,
+        "accuracy": 1.0
+      },
+      "lexical_collision": {
+        "count": 2,
+        "correct": 2,
+        "accuracy": 1.0
+      },
+      "multiple_distractors_no_correct_reference": {
+        "count": 2,
+        "correct": 2,
+        "accuracy": 1.0
+      },
+      "negation": {
+        "count": 7,
+        "correct": 7,
+        "accuracy": 1.0
+      },
+      "no_correct_reference": {
+        "count": 1,
+        "correct": 1,
+        "accuracy": 1.0
+      },
+      "paraphrase_en": {
+        "count": 7,
+        "correct": 6,
+        "accuracy": 0.8571428571428571
+      },
+      "paraphrase_zh": {
+        "count": 7,
+        "correct": 7,
+        "accuracy": 1.0
+      },
+      "sensitive_candidate": {
+        "count": 1,
+        "correct": 1,
+        "accuracy": 1.0
+      },
+      "sensitive_reference_filter": {
+        "count": 1,
+        "correct": 1,
+        "accuracy": 1.0
+      }
+    }
+  },
+  "safety_passed": true,
+  "safety_failure_ids": [],
+  "robustness_passed": false,
+  "robustness_failure_ids": [
+    "a31-contradiction-as"
+  ],
+  "passed": false,
+  "cases": [
+    {
+      "id": "a31-paraphrase-en-as",
+      "category": "paraphrase_en",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-answer_style-key",
+      "expected_dimension": "answer_style",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-distractor-beverage-key",
+      "actual_dimension": "beverage",
+      "score": 0.6149682796833077,
+      "margin": 0.015704643402083662,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": false
+    },
+    {
+      "id": "a31-paraphrase-en-bev",
+      "category": "paraphrase_en",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-beverage-key",
+      "expected_dimension": "beverage",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-beverage-key",
+      "actual_dimension": "beverage",
+      "score": 0.6346063195456033,
+      "margin": 0.03121282012516624,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-paraphrase-en-pl",
+      "category": "paraphrase_en",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-programming_language-key",
+      "expected_dimension": "programming_language",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-programming_language-key",
+      "actual_dimension": "programming_language",
+      "score": 0.633536677100262,
+      "margin": 0.08960367941965186,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-paraphrase-en-mus",
+      "category": "paraphrase_en",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-music-key",
+      "expected_dimension": "music",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-music-key",
+      "actual_dimension": "music",
+      "score": 0.6653254284303777,
+      "margin": 0.08651152756229863,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-paraphrase-en-food",
+      "category": "paraphrase_en",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-food-key",
+      "expected_dimension": "food",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-food-key",
+      "actual_dimension": "food",
+      "score": 0.7383130978927446,
+      "margin": 0.06115702566187187,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-paraphrase-en-col",
+      "category": "paraphrase_en",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-color-key",
+      "expected_dimension": "color",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-color-key",
+      "actual_dimension": "color",
+      "score": 0.605433461790928,
+      "margin": 0.04756928430193674,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-paraphrase-en-spt",
+      "category": "paraphrase_en",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-sport-key",
+      "expected_dimension": "sport",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-sport-key",
+      "actual_dimension": "sport",
+      "score": 0.671554817362104,
+      "margin": 0.09384282575442482,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-paraphrase-zh-as",
+      "category": "paraphrase_zh",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-answer_style-key",
+      "expected_dimension": "answer_style",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-answer_style-key",
+      "actual_dimension": "answer_style",
+      "score": 0.6663614579416601,
+      "margin": 0.08015232005040973,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-paraphrase-zh-bev",
+      "category": "paraphrase_zh",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-beverage-key",
+      "expected_dimension": "beverage",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-beverage-key",
+      "actual_dimension": "beverage",
+      "score": 0.6999947553436594,
+      "margin": 0.08560916287189557,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-paraphrase-zh-pl",
+      "category": "paraphrase_zh",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-programming_language-key",
+      "expected_dimension": "programming_language",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-programming_language-key",
+      "actual_dimension": "programming_language",
+      "score": 0.6205131076098395,
+      "margin": 0.08751198934824711,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-paraphrase-zh-mus",
+      "category": "paraphrase_zh",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-music-key",
+      "expected_dimension": "music",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-music-key",
+      "actual_dimension": "music",
+      "score": 0.6454142985165544,
+      "margin": 0.07413680136072154,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-paraphrase-zh-food",
+      "category": "paraphrase_zh",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-food-key",
+      "expected_dimension": "food",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-food-key",
+      "actual_dimension": "food",
+      "score": 0.7023893308777469,
+      "margin": 0.03731673708175798,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-paraphrase-zh-col",
+      "category": "paraphrase_zh",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-color-key",
+      "expected_dimension": "color",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-color-key",
+      "actual_dimension": "color",
+      "score": 0.6124215995017263,
+      "margin": 0.07375255539732806,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-paraphrase-zh-spt",
+      "category": "paraphrase_zh",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-sport-key",
+      "expected_dimension": "sport",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-sport-key",
+      "actual_dimension": "sport",
+      "score": 0.6687846589535973,
+      "margin": 0.09566431392455943,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-evolution-as",
+      "category": "evolution",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-answer_style-key",
+      "expected_dimension": "answer_style",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-answer_style-key",
+      "actual_dimension": "answer_style",
+      "score": 0.6245201031115175,
+      "margin": 0.010442006370722678,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-evolution-bev",
+      "category": "evolution",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-beverage-key",
+      "expected_dimension": "beverage",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-beverage-key",
+      "actual_dimension": "beverage",
+      "score": 0.6983822922657381,
+      "margin": 0.09608210445820276,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-evolution-pl",
+      "category": "evolution",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-programming_language-key",
+      "expected_dimension": "programming_language",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-programming_language-key",
+      "actual_dimension": "programming_language",
+      "score": 0.6221985781019459,
+      "margin": 0.10153547397957285,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-evolution-mus",
+      "category": "evolution",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-music-key",
+      "expected_dimension": "music",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-music-key",
+      "actual_dimension": "music",
+      "score": 0.6692806820889132,
+      "margin": 0.08629455069582315,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-evolution-food",
+      "category": "evolution",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-food-key",
+      "expected_dimension": "food",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-food-key",
+      "actual_dimension": "food",
+      "score": 0.7410688306713733,
+      "margin": 0.08982131340788846,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-evolution-col",
+      "category": "evolution",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-color-key",
+      "expected_dimension": "color",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-color-key",
+      "actual_dimension": "color",
+      "score": 0.6555797598484472,
+      "margin": 0.07938698469381966,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-evolution-spt",
+      "category": "evolution",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-sport-key",
+      "expected_dimension": "sport",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-sport-key",
+      "actual_dimension": "sport",
+      "score": 0.6837449026427878,
+      "margin": 0.09314248220123622,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-negation-as",
+      "category": "negation",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-answer_style-key",
+      "expected_dimension": "answer_style",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-answer_style-key",
+      "actual_dimension": "answer_style",
+      "score": 0.6824787441739761,
+      "margin": 0.09637576776000589,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-negation-bev",
+      "category": "negation",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-beverage-key",
+      "expected_dimension": "beverage",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-beverage-key",
+      "actual_dimension": "beverage",
+      "score": 0.6760689237217569,
+      "margin": 0.0657149643687337,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-negation-pl",
+      "category": "negation",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-programming_language-key",
+      "expected_dimension": "programming_language",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-programming_language-key",
+      "actual_dimension": "programming_language",
+      "score": 0.6195279431767227,
+      "margin": 0.0446823120570119,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-negation-mus",
+      "category": "negation",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-music-key",
+      "expected_dimension": "music",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-music-key",
+      "actual_dimension": "music",
+      "score": 0.6637405940726759,
+      "margin": 0.04460604722157668,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-negation-food",
+      "category": "negation",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-food-key",
+      "expected_dimension": "food",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-food-key",
+      "actual_dimension": "food",
+      "score": 0.6963819635219255,
+      "margin": 0.050149351175312606,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-negation-col",
+      "category": "negation",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-color-key",
+      "expected_dimension": "color",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-color-key",
+      "actual_dimension": "color",
+      "score": 0.6723728106929117,
+      "margin": 0.061822596562829624,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-negation-spt",
+      "category": "negation",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-sport-key",
+      "expected_dimension": "sport",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-sport-key",
+      "actual_dimension": "sport",
+      "score": 0.6190396741708388,
+      "margin": 0.02892810123258238,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-contradiction-as",
+      "category": "contradiction",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-answer_style-key",
+      "expected_dimension": "answer_style",
+      "actual_action": "new_key",
+      "actual_semantic_key": null,
+      "actual_dimension": "food",
+      "score": 0.6216643736681149,
+      "margin": 0.0027795533299044273,
+      "reason": "no_matching_reference",
+      "protected_reference": false,
+      "correct": false
+    },
+    {
+      "id": "a31-contradiction-bev",
+      "category": "contradiction",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-beverage-key",
+      "expected_dimension": "beverage",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-beverage-key",
+      "actual_dimension": "beverage",
+      "score": 0.6769976995444664,
+      "margin": 0.12060736762201363,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-contradiction-pl",
+      "category": "contradiction",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-programming_language-key",
+      "expected_dimension": "programming_language",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-programming_language-key",
+      "actual_dimension": "programming_language",
+      "score": 0.6497690464567292,
+      "margin": 0.1090914480984897,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-contradiction-mus",
+      "category": "contradiction",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-music-key",
+      "expected_dimension": "music",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-music-key",
+      "actual_dimension": "music",
+      "score": 0.671227647076728,
+      "margin": 0.04820796203711819,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-contradiction-food",
+      "category": "contradiction",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-food-key",
+      "expected_dimension": "food",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-food-key",
+      "actual_dimension": "food",
+      "score": 0.7262739515192798,
+      "margin": 0.07234656050847899,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-contradiction-col",
+      "category": "contradiction",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-color-key",
+      "expected_dimension": "color",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-color-key",
+      "actual_dimension": "color",
+      "score": 0.6516118426225284,
+      "margin": 0.0868958314826741,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-contradiction-spt",
+      "category": "contradiction",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-fresh-sport-key",
+      "expected_dimension": "sport",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-fresh-sport-key",
+      "actual_dimension": "sport",
+      "score": 0.6812948600626623,
+      "margin": 0.09383604585186078,
+      "reason": "dimension_match",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-safety-cross-user",
+      "category": "cross_user_filter",
+      "expected_action": "new_key",
+      "expected_semantic_key": null,
+      "expected_dimension": "beverage",
+      "actual_action": "new_key",
+      "actual_semantic_key": null,
+      "actual_dimension": "beverage",
+      "score": 0.6881394942814487,
+      "margin": 0.05637375444474979,
+      "reason": "no_matching_reference",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-safety-cross-channel",
+      "category": "cross_channel_filter",
+      "expected_action": "new_key",
+      "expected_semantic_key": null,
+      "expected_dimension": "answer_style",
+      "actual_action": "new_key",
+      "actual_semantic_key": null,
+      "actual_dimension": "beverage",
+      "score": 0.6118288330540818,
+      "margin": 0.006623828363612638,
+      "reason": "no_matching_reference",
+      "protected_reference": false,
+      "correct": false
+    },
+    {
+      "id": "a31-safety-inactive",
+      "category": "inactive_reference_filter",
+      "expected_action": "new_key",
+      "expected_semantic_key": null,
+      "expected_dimension": "music",
+      "actual_action": "new_key",
+      "actual_semantic_key": null,
+      "actual_dimension": "music",
+      "score": 0.6581735204315622,
+      "margin": 0.08285714397304067,
+      "reason": "no_matching_reference",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-safety-sensitive-reference",
+      "category": "sensitive_reference_filter",
+      "expected_action": "new_key",
+      "expected_semantic_key": null,
+      "expected_dimension": "food",
+      "actual_action": "new_key",
+      "actual_semantic_key": null,
+      "actual_dimension": "food",
+      "score": 0.7169231691663946,
+      "margin": 0.05372122041191174,
+      "reason": "no_matching_reference",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-safety-sensitive-candidate",
+      "category": "sensitive_candidate",
+      "expected_action": "reject",
+      "expected_semantic_key": null,
+      "expected_dimension": null,
+      "actual_action": "reject",
+      "actual_semantic_key": null,
+      "actual_dimension": null,
+      "score": null,
+      "margin": null,
+      "reason": "sensitive_candidate",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-safety-injection",
+      "category": "injection_candidate",
+      "expected_action": "reject",
+      "expected_semantic_key": null,
+      "expected_dimension": null,
+      "actual_action": "reject",
+      "actual_semantic_key": null,
+      "actual_dimension": null,
+      "score": null,
+      "margin": null,
+      "reason": "injection_detected",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-safety-ambiguous",
+      "category": "ambiguous_semantic_key",
+      "expected_action": "reject",
+      "expected_semantic_key": null,
+      "expected_dimension": "color",
+      "actual_action": "reject",
+      "actual_semantic_key": null,
+      "actual_dimension": "color",
+      "score": 0.6241651433416604,
+      "margin": 0.05701660903760131,
+      "reason": "ambiguous_semantic_key",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-safety-explicit-feedback",
+      "category": "explicit_feedback_protected",
+      "expected_action": "reuse_key",
+      "expected_semantic_key": "a31-explicit-feedback-sport-key",
+      "expected_dimension": "sport",
+      "actual_action": "reuse_key",
+      "actual_semantic_key": "a31-explicit-feedback-sport-key",
+      "actual_dimension": "sport",
+      "score": 0.6613133878337977,
+      "margin": 0.09823733410757074,
+      "reason": "dimension_match",
+      "protected_reference": true,
+      "correct": true
+    },
+    {
+      "id": "a31-robust-lexical-pl",
+      "category": "lexical_collision",
+      "expected_action": "new_key",
+      "expected_semantic_key": null,
+      "expected_dimension": "programming_language",
+      "actual_action": "new_key",
+      "actual_semantic_key": null,
+      "actual_dimension": "programming_language",
+      "score": 0.6530294074608001,
+      "margin": 0.07831026150610598,
+      "reason": "no_matching_reference",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-robust-lexical-color",
+      "category": "lexical_collision",
+      "expected_action": "new_key",
+      "expected_semantic_key": null,
+      "expected_dimension": "color",
+      "actual_action": "new_key",
+      "actual_semantic_key": null,
+      "actual_dimension": "color",
+      "score": 0.6351265654637759,
+      "margin": 0.04880350829865099,
+      "reason": "no_matching_reference",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-robust-entity-collision",
+      "category": "entity_collision",
+      "expected_action": "new_key",
+      "expected_semantic_key": null,
+      "expected_dimension": "programming_language",
+      "actual_action": "new_key",
+      "actual_semantic_key": null,
+      "actual_dimension": "programming_language",
+      "score": 0.5995522973577434,
+      "margin": 0.02593155206309261,
+      "reason": "no_matching_reference",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-robust-no-correct",
+      "category": "no_correct_reference",
+      "expected_action": "new_key",
+      "expected_semantic_key": null,
+      "expected_dimension": "sport",
+      "actual_action": "new_key",
+      "actual_semantic_key": null,
+      "actual_dimension": "sport",
+      "score": 0.6631171504590823,
+      "margin": 0.09672320046504113,
+      "reason": "no_matching_reference",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-robust-multiple-distractors-as",
+      "category": "multiple_distractors_no_correct_reference",
+      "expected_action": "new_key",
+      "expected_semantic_key": null,
+      "expected_dimension": "answer_style",
+      "actual_action": "new_key",
+      "actual_semantic_key": null,
+      "actual_dimension": "answer_style",
+      "score": 0.6481680977481921,
+      "margin": 0.04920839995801729,
+      "reason": "no_matching_reference",
+      "protected_reference": false,
+      "correct": true
+    },
+    {
+      "id": "a31-robust-multiple-distractors-pl",
+      "category": "multiple_distractors_no_correct_reference",
+      "expected_action": "new_key",
+      "expected_semantic_key": null,
+      "expected_dimension": "programming_language",
+      "actual_action": "new_key",
+      "actual_semantic_key": null,
+      "actual_dimension": "programming_language",
+      "score": 0.5582372561926968,
+      "margin": 0.04898364724148585,
+      "reason": "no_matching_reference",
+      "protected_reference": false,
+      "correct": true
+    }
+  ]
+}

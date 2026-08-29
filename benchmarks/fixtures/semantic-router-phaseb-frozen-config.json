@@ -1,0 +1,20 @@
+{
+  "config_version": "semantic-router-phaseb-frozen-config-v1",
+  "source_checkpoint": "stage4-phase-a5",
+  "provider": {
+    "name": "siliconflow",
+    "model": "BAAI/bge-m3",
+    "dimension": 1024,
+    "projection_version": "siliconflow-bge-m3-1024-v1"
+  },
+  "strategy": {
+    "variant": "top2_mean",
+    "strategy_version": "meno-prototype-ensemble-2.0.0",
+    "aggregation": "top2_mean",
+    "prototype_fixture": "benchmarks/fixtures/semantic-prototypes-a5-v2.json",
+    "prototype_sha256": "d9e97ec67b5688b44728a1b2bcf73cc39d7625ef1a7baf39b83862cae7a136dc",
+    "score_threshold": 0.475,
+    "margin_threshold": 0.005,
+    "threshold_search_allowed_after_freeze": false
+  }
+}

@@ -1,0 +1,424 @@
+{
+  "benchmark": "Meno preference distribution calibration diagnostic",
+  "schema_version": "preference-calibration-v1",
+  "fixture_sha256": "f06c33f58028b0b4b81194303313da7d11102725e5cb5637461d7770cf12d42b",
+  "evidence_grade": "synthetic_diagnostic",
+  "answer_model_calls": 0,
+  "future_labels_ingested": false,
+  "preference_distribution_v2_enabled": true,
+  "strategy_versions": [
+    "preference-dirichlet-beta-v2"
+  ],
+  "calibration_statuses": [
+    "uncalibrated"
+  ],
+  "splits": {
+    "development": {
+      "case_count": 8,
+      "valid_forecast_count": 8,
+      "coverage": 1.0,
+      "candidate": {
+        "sample_count": 8,
+        "positive_labels": 4,
+        "negative_labels": 4,
+        "brier_score": 0.2534722222222222,
+        "ece": 0.04166666666666666,
+        "negative_log_likelihood": 0.7001898998016194,
+        "mean_confidence": 0.45833333333333337,
+        "empirical_accuracy": 0.5,
+        "overconfidence": -0.04166666666666663,
+        "bins": [
+          {
+            "lower": 0.4,
+            "upper": 0.5,
+            "count": 4,
+            "average_confidence": 0.4166666666666667,
+            "empirical_accuracy": 0.5,
+            "absolute_gap": 0.08333333333333331
+          },
+          {
+            "lower": 0.5,
+            "upper": 0.6,
+            "count": 4,
+            "average_confidence": 0.5,
+            "empirical_accuracy": 0.5,
+            "absolute_gap": 0.0
+          }
+        ]
+      },
+      "extractor_baseline": {
+        "sample_count": 8,
+        "positive_labels": 4,
+        "negative_labels": 4,
+        "brier_score": 0.41000000000000003,
+        "ece": 0.4,
+        "negative_log_likelihood": 1.2039728043259361,
+        "mean_confidence": 0.9,
+        "empirical_accuracy": 0.5,
+        "overconfidence": 0.4,
+        "bins": [
+          {
+            "lower": 0.9,
+            "upper": 1.0,
+            "count": 8,
+            "average_confidence": 0.9,
+            "empirical_accuracy": 0.5,
+            "absolute_gap": 0.4
+          }
+        ]
+      }
+    },
+    "holdout": {
+      "case_count": 8,
+      "valid_forecast_count": 8,
+      "coverage": 1.0,
+      "candidate": {
+        "sample_count": 8,
+        "positive_labels": 4,
+        "negative_labels": 4,
+        "brier_score": 0.2534722222222222,
+        "ece": 0.04166666666666666,
+        "negative_log_likelihood": 0.7001898998016194,
+        "mean_confidence": 0.45833333333333337,
+        "empirical_accuracy": 0.5,
+        "overconfidence": -0.04166666666666663,
+        "bins": [
+          {
+            "lower": 0.4,
+            "upper": 0.5,
+            "count": 4,
+            "average_confidence": 0.4166666666666667,
+            "empirical_accuracy": 0.5,
+            "absolute_gap": 0.08333333333333331
+          },
+          {
+            "lower": 0.5,
+            "upper": 0.6,
+            "count": 4,
+            "average_confidence": 0.5,
+            "empirical_accuracy": 0.5,
+            "absolute_gap": 0.0
+          }
+        ]
+      },
+      "extractor_baseline": {
+        "sample_count": 8,
+        "positive_labels": 4,
+        "negative_labels": 4,
+        "brier_score": 0.41000000000000003,
+        "ece": 0.4,
+        "negative_log_likelihood": 1.2039728043259361,
+        "mean_confidence": 0.9,
+        "empirical_accuracy": 0.5,
+        "overconfidence": 0.4,
+        "bins": [
+          {
+            "lower": 0.9,
+            "upper": 1.0,
+            "count": 8,
+            "average_confidence": 0.9,
+            "empirical_accuracy": 0.5,
+            "absolute_gap": 0.4
+          }
+        ]
+      }
+    }
+  },
+  "diagnostic_gate": {
+    "thresholds": {
+      "minimum_holdout_samples": 8,
+      "minimum_positive_labels": 4,
+      "minimum_negative_labels": 4,
+      "maximum_brier_score": 0.2,
+      "maximum_ece": 0.1,
+      "minimum_brier_improvement": 0.02,
+      "minimum_ece_improvement": 0.02
+    },
+    "conditions": {
+      "coverage_complete": true,
+      "minimum_holdout_samples": true,
+      "minimum_positive_labels": true,
+      "minimum_negative_labels": true,
+      "maximum_brier_score": false,
+      "maximum_ece": true,
+      "minimum_brier_improvement": true,
+      "minimum_ece_improvement": true
+    },
+    "passed": false,
+    "failure_reasons": [
+      "maximum_brier_score"
+    ]
+  },
+  "production_go_eligible": false,
+  "production_decision": "NO-GO",
+  "production_blockers": [
+    "synthetic labels cannot establish real-world calibration",
+    "diagnostic calibration gate failed"
+  ],
+  "cases": [
+    {
+      "case_id": "development-single-answer",
+      "split": "development",
+      "expected_mode": "concise answers",
+      "mode_correct": true,
+      "label_source": "synthetic_future_feedback",
+      "valid": true,
+      "candidate_probability": 0.5,
+      "conditional_mode_probability": 1.0,
+      "extractor_probability": 0.9,
+      "strategy_version": "preference-dirichlet-beta-v2",
+      "calibration_status": "uncalibrated",
+      "support_event_ids": [
+        "cal-dev-single-answer-1"
+      ]
+    },
+    {
+      "case_id": "development-single-beverage",
+      "split": "development",
+      "expected_mode": "tea",
+      "mode_correct": false,
+      "label_source": "synthetic_future_feedback",
+      "valid": true,
+      "candidate_probability": 0.5,
+      "conditional_mode_probability": 1.0,
+      "extractor_probability": 0.9,
+      "strategy_version": "preference-dirichlet-beta-v2",
+      "calibration_status": "uncalibrated",
+      "support_event_ids": [
+        "cal-dev-single-beverage-1"
+      ]
+    },
+    {
+      "case_id": "development-single-language",
+      "split": "development",
+      "expected_mode": "Python",
+      "mode_correct": true,
+      "label_source": "synthetic_future_feedback",
+      "valid": true,
+      "candidate_probability": 0.5,
+      "conditional_mode_probability": 1.0,
+      "extractor_probability": 0.9,
+      "strategy_version": "preference-dirichlet-beta-v2",
+      "calibration_status": "uncalibrated",
+      "support_event_ids": [
+        "cal-dev-single-language-1"
+      ]
+    },
+    {
+      "case_id": "development-single-food",
+      "split": "development",
+      "expected_mode": "sushi",
+      "mode_correct": false,
+      "label_source": "synthetic_future_feedback",
+      "valid": true,
+      "candidate_probability": 0.5,
+      "conditional_mode_probability": 1.0,
+      "extractor_probability": 0.9,
+      "strategy_version": "preference-dirichlet-beta-v2",
+      "calibration_status": "uncalibrated",
+      "support_event_ids": [
+        "cal-dev-single-food-1"
+      ]
+    },
+    {
+      "case_id": "development-drift-answer",
+      "split": "development",
+      "expected_mode": "detailed answers now",
+      "mode_correct": true,
+      "label_source": "synthetic_future_feedback",
+      "valid": true,
+      "candidate_probability": 0.4166666666666667,
+      "conditional_mode_probability": 0.8333333333333334,
+      "extractor_probability": 0.9,
+      "strategy_version": "preference-dirichlet-beta-v2",
+      "calibration_status": "uncalibrated",
+      "support_event_ids": [
+        "cal-dev-drift-answer-1",
+        "cal-dev-drift-answer-2"
+      ]
+    },
+    {
+      "case_id": "development-drift-beverage",
+      "split": "development",
+      "expected_mode": "coffee now",
+      "mode_correct": false,
+      "label_source": "synthetic_future_feedback",
+      "valid": true,
+      "candidate_probability": 0.4166666666666667,
+      "conditional_mode_probability": 0.8333333333333334,
+      "extractor_probability": 0.9,
+      "strategy_version": "preference-dirichlet-beta-v2",
+      "calibration_status": "uncalibrated",
+      "support_event_ids": [
+        "cal-dev-drift-beverage-1",
+        "cal-dev-drift-beverage-2"
+      ]
+    },
+    {
+      "case_id": "development-drift-language",
+      "split": "development",
+      "expected_mode": "Rust now",
+      "mode_correct": true,
+      "label_source": "synthetic_future_feedback",
+      "valid": true,
+      "candidate_probability": 0.4166666666666667,
+      "conditional_mode_probability": 0.8333333333333334,
+      "extractor_probability": 0.9,
+      "strategy_version": "preference-dirichlet-beta-v2",
+      "calibration_status": "uncalibrated",
+      "support_event_ids": [
+        "cal-dev-drift-language-1",
+        "cal-dev-drift-language-2"
+      ]
+    },
+    {
+      "case_id": "development-drift-food",
+      "split": "development",
+      "expected_mode": "sushi now",
+      "mode_correct": false,
+      "label_source": "synthetic_future_feedback",
+      "valid": true,
+      "candidate_probability": 0.4166666666666667,
+      "conditional_mode_probability": 0.8333333333333334,
+      "extractor_probability": 0.9,
+      "strategy_version": "preference-dirichlet-beta-v2",
+      "calibration_status": "uncalibrated",
+      "support_event_ids": [
+        "cal-dev-drift-food-1",
+        "cal-dev-drift-food-2"
+      ]
+    },
+    {
+      "case_id": "holdout-single-answer",
+      "split": "holdout",
+      "expected_mode": "detailed answers",
+      "mode_correct": true,
+      "label_source": "synthetic_future_feedback",
+      "valid": true,
+      "candidate_probability": 0.5,
+      "conditional_mode_probability": 1.0,
+      "extractor_probability": 0.9,
+      "strategy_version": "preference-dirichlet-beta-v2",
+      "calibration_status": "uncalibrated",
+      "support_event_ids": [
+        "cal-holdout-single-answer-1"
+      ]
+    },
+    {
+      "case_id": "holdout-single-beverage",
+      "split": "holdout",
+      "expected_mode": "coffee",
+      "mode_correct": false,
+      "label_source": "synthetic_future_feedback",
+      "valid": true,
+      "candidate_probability": 0.5,
+      "conditional_mode_probability": 1.0,
+      "extractor_probability": 0.9,
+      "strategy_version": "preference-dirichlet-beta-v2",
+      "calibration_status": "uncalibrated",
+      "support_event_ids": [
+        "cal-holdout-single-beverage-1"
+      ]
+    },
+    {
+      "case_id": "holdout-single-language",
+      "split": "holdout",
+      "expected_mode": "Rust",
+      "mode_correct": true,
+      "label_source": "synthetic_future_feedback",
+      "valid": true,
+      "candidate_probability": 0.5,
+      "conditional_mode_probability": 1.0,
+      "extractor_probability": 0.9,
+      "strategy_version": "preference-dirichlet-beta-v2",
+      "calibration_status": "uncalibrated",
+      "support_event_ids": [
+        "cal-holdout-single-language-1"
+      ]
+    },
+    {
+      "case_id": "holdout-single-food",
+      "split": "holdout",
+      "expected_mode": "pizza",
+      "mode_correct": false,
+      "label_source": "synthetic_future_feedback",
+      "valid": true,
+      "candidate_probability": 0.5,
+      "conditional_mode_probability": 1.0,
+      "extractor_probability": 0.9,
+      "strategy_version": "preference-dirichlet-beta-v2",
+      "calibration_status": "uncalibrated",
+      "support_event_ids": [
+        "cal-holdout-single-food-1"
+      ]
+    },
+    {
+      "case_id": "holdout-drift-answer",
+      "split": "holdout",
+      "expected_mode": "verbose answers now",
+      "mode_correct": true,
+      "label_source": "synthetic_future_feedback",
+      "valid": true,
+      "candidate_probability": 0.4166666666666667,
+      "conditional_mode_probability": 0.8333333333333334,
+      "extractor_probability": 0.9,
+      "strategy_version": "preference-dirichlet-beta-v2",
+      "calibration_status": "uncalibrated",
+      "support_event_ids": [
+        "cal-holdout-drift-answer-1",
+        "cal-holdout-drift-answer-2"
+      ]
+    },
+    {
+      "case_id": "holdout-drift-beverage",
+      "split": "holdout",
+      "expected_mode": "tea now",
+      "mode_correct": false,
+      "label_source": "synthetic_future_feedback",
+      "valid": true,
+      "candidate_probability": 0.4166666666666667,
+      "conditional_mode_probability": 0.8333333333333334,
+      "extractor_probability": 0.9,
+      "strategy_version": "preference-dirichlet-beta-v2",
+      "calibration_status": "uncalibrated",
+      "support_event_ids": [
+        "cal-holdout-drift-beverage-1",
+        "cal-holdout-drift-beverage-2"
+      ]
+    },
+    {
+      "case_id": "holdout-drift-language",
+      "split": "holdout",
+      "expected_mode": "Python now",
+      "mode_correct": true,
+      "label_source": "synthetic_future_feedback",
+      "valid": true,
+      "candidate_probability": 0.4166666666666667,
+      "conditional_mode_probability": 0.8333333333333334,
+      "extractor_probability": 0.9,
+      "strategy_version": "preference-dirichlet-beta-v2",
+      "calibration_status": "uncalibrated",
+      "support_event_ids": [
+        "cal-holdout-drift-language-1",
+        "cal-holdout-drift-language-2"
+      ]
+    },
+    {
+      "case_id": "holdout-drift-food",
+      "split": "holdout",
+      "expected_mode": "pizza now",
+      "mode_correct": false,
+      "label_source": "synthetic_future_feedback",
+      "valid": true,
+      "candidate_probability": 0.4166666666666667,
+      "conditional_mode_probability": 0.8333333333333334,
+      "extractor_probability": 0.9,
+      "strategy_version": "preference-dirichlet-beta-v2",
+      "calibration_status": "uncalibrated",
+      "support_event_ids": [
+        "cal-holdout-drift-food-1",
+        "cal-holdout-drift-food-2"
+      ]
+    }
+  ]
+}

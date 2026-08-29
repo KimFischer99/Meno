@@ -1,0 +1,38 @@
+{
+  "manifest_version": "semantic-router-a31-evaluation-manifest-v1",
+  "files": {
+    "config_sha256": "47e621e2b263b75b2e542e62154fd330a64cfb00e32e1652bc4b4b940b243387",
+    "config_module_sha256": "678f991ec6b435729801eb05e8324d920443eb2da863ca6a697c5d486d505119",
+    "development_fixture_sha256": "908d9f21b184fc0ce9fe273be91890b0fc402ab34cf9cdaa1ca630eeba7305d7",
+    "development_runner_sha256": "1a3230b85f585e04b2a3ca26c3036a54746df6d33aa2e72f02b9252c772af118",
+    "extractor_sha256": "78f35d436b6d3a5040ce45010fed6993a90e880ec835cd9ba820d368192c256a",
+    "holdout_base_runner_sha256": "5194659212753801064624bf768c1a2ea33f2187ca3cb314c0e2cc017eb5b1b1",
+    "holdout_fixture_sha256": "7868c19ccbd09a7799ac8d0c220147242040223e17a81e9745bd76f748a2a635",
+    "holdout_runner_sha256": "2bc474847fc9c7e41639c2c34b20f48a83aee51766dd424e98aa49422312429e",
+    "prototype_sha256": "8e7a8e2e1b2c2f608d72c78289236e2883303039b5957bba343403f27fcd8fbe",
+    "router_sha256": "dd1fe5f08c91779c08849f508d0abc2febf02c4319dbc2d353a3277840a326bf",
+    "shadow_runner_sha256": "8539441df410adda8e3125865f1615e031597467474e83b4fb2bbe6fb755b24a",
+    "vector_sha256": "400d3c70f065513d93c6dbaa1628a1c4e831e8d915f4969dac80fe5e4e920bdf"
+  },
+  "policy": {
+    "aggregation": "top2_mean",
+    "score_threshold": 0.425,
+    "margin_threshold": 0.0,
+    "minimum_recall": 0.5,
+    "false_merge_count": 0
+  },
+  "coverage": {
+    "minimum_provider_scored_count": 35,
+    "minimum_provider_scored_per_dimension": 4,
+    "provider_scored_count": 47,
+    "provider_scored_by_dimension": {
+      "answer_style": 7,
+      "beverage": 6,
+      "color": 7,
+      "food": 6,
+      "music": 6,
+      "programming_language": 8,
+      "sport": 7
+    }
+  }
+}
