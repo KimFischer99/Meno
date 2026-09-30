@@ -9,6 +9,7 @@ import time
 import uuid
 from contextlib import closing
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -183,9 +184,8 @@ class MenoMemoryProvider(MemoryProvider):
         return None
 
     def recall_status(self):
-        if self._last_recall_count <= 0:
-            return None
-        return RecallStatus(provider_label="Meno", count=self._last_recall_count, glyph="🧠")
+        # Keep recall context in prefetch without adding a user-facing status line.
+        return None
 
     def sync_turn(
         self,
@@ -206,6 +206,7 @@ class MenoMemoryProvider(MemoryProvider):
                 {
                     "user_id": self._user_id,
                     "event_id": event_id,
+                    "occurred_at": datetime.now(UTC).isoformat(),
                     "source": {
                         "type": "hermes_turn",
                         "profile": self._profile,
@@ -255,6 +256,7 @@ class MenoMemoryProvider(MemoryProvider):
             {
                 "user_id": self._user_id,
                 "event_id": event_id,
+                "occurred_at": datetime.now(UTC).isoformat(),
                 "source": {
                     "type": "hermes_memory_write",
                     "profile": self._profile,

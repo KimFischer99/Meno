@@ -1,8 +1,10 @@
 [Unit]
 Description=Meno memory sidecar
-Documentation=https://github.com/replace-with-your-org/replace-with-repo/blob/main/deploy/README.md
+Documentation=https://github.com/KimFischer99/Meno/blob/main/deploy/README.md
 After=network-online.target
 Wants=network-online.target
+StartLimitIntervalSec=120
+StartLimitBurst=5
 
 [Service]
 Type=simple
@@ -21,8 +23,6 @@ RestartSec=5s
 # Do not restart forever on a bad config: five failures in two minutes means the
 # problem is not transient, and a crash loop that keeps binding the port is worse
 # than a stopped service Hermes can route around.
-StartLimitIntervalSec=120
-StartLimitBurst=5
 
 # Kernel-level backstop, independent of MENO_VECTOR_MAX_RESIDENT. That setting
 # bounds vectors only; this bounds everything. Budget: ~130 MB baseline plus

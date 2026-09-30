@@ -1,118 +1,80 @@
-# Connecting Hermes to Meno
+# Install Meno for one Hermes profile
 
-Three environment variables in the Hermes profile. No changes to the Hermes core
-loop, and no code changes on either side.
+The installer puts the sidecar and its virtual environment under the selected
+Hermes profile's `meno-data/`, adds a profile-local `meno` provider, and sets
+`memory.provider: meno` in that profile's `config.yaml`. It does not edit Hermes
+source or restart Hermes.
 
-## Prerequisites
+## Install
 
-Meno running and healthy on the same host:
-
-```bash
-systemctl status meno
-curl -s http://127.0.0.1:8765/health/ready
-```
-
-## Register the provider
-
-Meno ships a `hermes_agent.memory_providers` entry point, so installing the
-package into the environment Hermes runs from is enough for discovery:
+Run from a Linux host with Python, systemd, and the Meno checkout available:
 
 ```bash
-# In the environment Hermes itself uses
-pip install -e /opt/meno
+/path/to/hermes/venv/bin/python deploy/install-hermes.py --hermes-home ~/.hermes --start
 ```
 
-Confirm Hermes can see it before wiring anything up — if discovery fails, the
-variables below will silently do nothing:
+The installer prompts for the SiliconFlow API key with `getpass`. To supply it
+non-interactively, set `MENO_INSTALL_SILICONFLOW_KEY`; the installer does not
+print the key. It creates a separate venv in `<hermes-home>/meno-data/.venv`,
+installs the checkout and its declared dependencies, then runs the Meno
+migration. Existing config, profile `.env`, plugin shim, and systemd unit files
+are backed up before edits. Existing environment values are retained; a
+conflicting Meno setting stops installation for manual resolution. The stable
+`MENO_USER_ID` is stored in the profile `.env` and reused on later installs.
+The installed profile uses the deployed state-materialization, context,
+preference, reflection, and evidence-selection settings, with a 10,000-vector
+cap. Semantic routing and layered retrieval remain disabled.
+If an existing `meno.service` points to another environment/database, the installer
+stops before changing the profile. Use the [manual upgrade guide](README.md) to
+preserve that service's canonical state.
+
+The installer selects a system service when run as root and a user service
+otherwise. Starting waits for the local health endpoint, loads the provider
+through Hermes, then makes an authenticated
+retrieve request. It reports success only after all three checks pass. Without
+`--start`, start the generated service using the command printed by the
+installer. Restart Hermes after installation to load the new profile config.
+
+## Diagnose
+
+Run the provider and authenticated API check with the same profile and Hermes
+source tree used by the Hermes process:
 
 ```bash
-python3 -c "
-from importlib.metadata import entry_points
-found = [e.name for e in entry_points(group='hermes_agent.memory_providers')]
-print('discovered providers:', found)
-"
+/path/to/hermes/venv/bin/python deploy/install-hermes.py --hermes-home ~/.hermes --hermes-dir /path/to/hermes-agent --check
 ```
 
-## Configure the profile
+`--hermes-dir` is optional when `plugins/memory/__init__.py` is already
+discoverable from the Python executable's parent paths. The check sets
+`HERMES_HOME` to the selected profile, verifies `memory.provider`, asks Hermes'
+real `load_memory_provider('meno', register_skills=False)` loader to load the
+provider, then checks `/health/ready` and an authenticated `/v1/retrieve`. It
+does not print retrieved memory text.
 
-Add to the active Hermes profile's `.env`:
+For foreground startup, use the sidecar interpreter and environment created by
+the installer:
 
 ```bash
-MENO_API_URL=http://127.0.0.1:8765
-MENO_API_TOKEN=<the same token as MENO_API_TOKEN in /etc/meno.env>
-MENO_USER_ID=<stable identifier for this profile>
+MENO_ENV_FILE="$HERMES_HOME/meno-data/meno.env" \
+MENO_PYTHON="$HERMES_HOME/meno-data/.venv/bin/python" deploy/start.sh
 ```
 
-Optional, with its default:
+Set `HERMES_HOME` to your profile directory first. A non-root systemd user service
+needs a user manager; enable lingering if it should run after logout.
+
+For service issues, inspect the matching system or user unit:
 
 ```bash
-MENO_PROVIDER_TIMEOUT_SECONDS=0.8
+systemctl status meno.service
+systemctl --user status meno.service
 ```
 
-Notes on each:
+Use the command matching how the installer was run. A failed health check means
+the sidecar is not ready; a provider load error usually means the Hermes source
+directory or profile plugin path is wrong; an authenticated retrieve error
+usually means the sidecar and profile tokens differ. Do not paste either `.env`
+file into diagnostics because they contain credentials.
 
-- **`MENO_API_TOKEN` must match the sidecar's token exactly.** A mismatch produces
-  401s that the provider swallows — it is fail-open by design — so Hermes keeps
-  working with no memory and no error. Verify with the check below rather than
-  assuming.
-- **`MENO_USER_ID` must be stable across sessions.** Meno's whole purpose is
-  cross-session user state; a per-session identifier makes preference evolution
-  invisible. It must also be stable across restarts, so do not derive it from
-  anything ephemeral.
-- **`MENO_PROVIDER_TIMEOUT_SECONDS` bounds every call.** The default 0.8 s was
-  chosen so a hung sidecar cannot stall a turn; the reliability suite measures a
-  hanging server at 0.808 s, absorbed by this timeout.
-
-## Verify the connection
-
-```bash
-# 1. The token works (401 means the tokens differ)
-curl -s -o /dev/null -w '%{http_code}\n' \
-  -H "Authorization: Bearer $MENO_API_TOKEN" \
-  -X POST http://127.0.0.1:8765/v1/retrieve \
-  -H 'Content-Type: application/json' \
-  -d '{"user_id":"probe","purpose":"response_personalization",
-       "context":{"query":"hello","task_type":"conversation_recall"},
-       "constraints":{"max_facets":4}}'
-# Expect 200. 401 = token mismatch. Connection refused = sidecar not running.
-
-# 2. State is accumulating after some real usage
-curl -s -H "Authorization: Bearer $MENO_API_TOKEN" \
-  "http://127.0.0.1:8765/v1/revisions/$MENO_USER_ID"
-```
-
-If the revision stays at zero while Hermes is in use, the provider is not being
-invoked — recheck entry-point discovery and that the variables are in the profile
-Hermes actually loaded.
-
-## What failure looks like
-
-Meno is a sidecar, not a dependency. Measured behavior (Gate Charter #11): with the
-port dead or the server accepting connections but never answering, all seven
-provider entry points stay non-blocking and Hermes continues. Turns that happen
-during an outage are held in a durable spool rather than dropped.
-
-So the failure mode is *degraded personalization*, not a stalled agent. The
-corollary is that a broken connection is silent: nothing will complain, which is
-why the verification step above matters.
-
-## Making corrections easy is not optional
-
-Calibration (Charter #15) needs at least 10 negative outcomes — cases where the
-user said a remembered preference was wrong. If correcting a memory is hard to
-reach in the interface, that gate never closes no matter how long Meno runs.
-
-The endpoint is `POST /v1/feedback` with `reject` or `correct`. Surface it
-somewhere a user will actually use.
-
-## Turning it off
-
-Remove the three variables from the profile and restart Hermes. Nothing in
-Hermes depends on Meno being present. The sidecar can keep running, or:
-
-```bash
-sudo systemctl stop meno
-```
-
-The canonical store is untouched either way; re-adding the variables resumes with
-all prior state intact.
+To disable the integration, set `memory.provider` back to the prior provider in
+`config.yaml`, then restart Hermes. The sidecar data remains in
+`<hermes-home>/meno-data/`.

@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import hmac
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Header, HTTPException, Request, Response, status
@@ -83,18 +84,36 @@ def create_app(
                 except TimeoutError:
                     continue
 
+        async def warm_vectors() -> None:
+            # MENO_VECTOR_MODE=memory holds vectors in
+            # process memory only, so a restart silently drops every historical
+            # claim from retrieval until something re-projects them. Rebuild in
+            # the background on boot; a warmup failure must never block startup.
+            try:
+                rebuilt = await asyncio.to_thread(service.rebuild_projection)
+                print(f"meno vector warmup: {rebuilt} claims projected", flush=True)
+            except Exception:
+                logging.getLogger(__name__).exception("meno vector warmup failed")
+
+        warmup = (
+            asyncio.create_task(warm_vectors(), name="meno-vector-warmup")
+            if resolved.vector_mode == "memory"
+            else None
+        )
+
         task = asyncio.create_task(worker(), name="meno-outbox-worker")
         yield
         stop.set()
-        task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await task
+        if warmup is not None:
+            await warmup
         service.flush_audit_buffer()
         service.close()
 
     app = FastAPI(
         title="Meno Personal Agent Memory",
-        version="2.0.0",
+        version="3.0.0",
         lifespan=lifespan,
     )
 
@@ -161,7 +180,7 @@ def create_app(
     ):
         require_key(idempotency_key)
         try:
-            return service.feedback(request)
+            return service.feedback(request, idempotency_key=idempotency_key)
         except LookupError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         except ValueError as exc:
@@ -173,7 +192,10 @@ def create_app(
         idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     ):
         require_key(idempotency_key)
-        return service.set_consent(request)
+        try:
+            return service.set_consent(request, idempotency_key=idempotency_key)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.post("/v1/deletions")
     def deletion(
@@ -182,7 +204,7 @@ def create_app(
     ):
         require_key(idempotency_key)
         try:
-            return service.delete(request)
+            return service.delete(request, idempotency_key=idempotency_key)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 

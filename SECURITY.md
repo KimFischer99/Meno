@@ -13,7 +13,7 @@ Please do not include real user data, API keys, or database contents in a report
 
 Meno stores personal memory and injects it into agent prompts, so its security
 properties are about disclosure, not just availability. The following are
-vulnerabilities, and each has a gate in `Meno_v2.0_Gate_Charter.md`:
+vulnerabilities:
 
 - **Cross-user disclosure.** Any path by which one user's claim reaches another
   user's context.
@@ -50,5 +50,5 @@ See `deploy/README.md` for the configuration that satisfies these.
 
 ## Supported versions
 
-This is pre-1.0 software under active development. Fixes land on the default
-branch; there are no maintained release branches yet.
+The current supported version is Meno 3.x. Fixes land on the default branch;
+there are no separately maintained older release branches.

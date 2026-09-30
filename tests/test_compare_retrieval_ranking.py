@@ -13,6 +13,11 @@ TREATMENT = Path(
 )
 PHASEB2 = Path("artifacts/benchmarks/results/vps-phaseb2-retrieval-cache-development-hy3.json")
 
+requires_archived_results = pytest.mark.skipif(
+    not all(path.is_file() for path in (BASELINE, TREATMENT, PHASEB2)),
+    reason="Historical retrieval caches are local-only; synthetic comparison tests run offline",
+)
+
 
 def _write(path: Path, payload: dict) -> Path:
     path.write_text(json.dumps(payload), encoding="utf-8")
@@ -43,6 +48,7 @@ def _minimal_payload(**overrides) -> dict:
     return payload
 
 
+@requires_archived_results
 def test_comparison_reproduces_the_phase_b_product_gate_regression() -> None:
     report = compare_retrieval_ranking.compare(BASELINE, TREATMENT)
 
@@ -58,6 +64,7 @@ def test_comparison_reproduces_the_phase_b_product_gate_regression() -> None:
     )
 
 
+@requires_archived_results
 def test_phaseb2_regresses_the_same_subset() -> None:
     report = compare_retrieval_ranking.compare(BASELINE, PHASEB2)
 
@@ -65,6 +72,7 @@ def test_phaseb2_regresses_the_same_subset() -> None:
     assert track["delta"]["ranking_accuracy"] == pytest.approx(-0.0288, abs=5e-4)
 
 
+@requires_archived_results
 def test_missing_service_fingerprint_is_reported_not_silently_passed() -> None:
     report = compare_retrieval_ranking.compare(BASELINE, TREATMENT)
 
@@ -138,6 +146,7 @@ def test_allow_subset_still_refuses_a_different_dataset(tmp_path) -> None:
         compare_retrieval_ranking.compare(left, right, allow_subset=True)
 
 
+@requires_archived_results
 def test_full_comparison_is_not_flagged_as_a_subset() -> None:
     report = compare_retrieval_ranking.compare(BASELINE, TREATMENT)
 

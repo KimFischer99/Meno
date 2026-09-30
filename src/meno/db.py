@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from typing import Any
 
@@ -18,6 +19,7 @@ from sqlalchemy import (
     event,
     text,
 )
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker
 
 
@@ -141,6 +143,25 @@ class UserTokenSnapshot(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class UserTokenSnapshotDelta(Base):
+    __tablename__ = "meno_user_token_snapshot_deltas"
+    __table_args__ = (
+        UniqueConstraint("user_id", "state_revision", name="uq_user_token_delta_revision"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[str] = mapped_column(String(256), index=True)
+    state_revision: Mapped[int] = mapped_column(Integer, index=True)
+    base_revision: Mapped[int] = mapped_column(Integer)
+    previous_revision: Mapped[int] = mapped_column(Integer)
+    delta: Mapped[dict[str, Any]] = mapped_column(JSON)
+    content_hash: Mapped[str] = mapped_column(String(71), index=True)
+    schema_version: Mapped[str] = mapped_column(String(32), default="1.0.0")
+    policy_version: Mapped[str] = mapped_column(String(128))
+    extractor_version: Mapped[str] = mapped_column(String(128))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class PreferenceDistribution(Base):
     __tablename__ = "meno_preference_distributions"
     __table_args__ = (
@@ -233,6 +254,26 @@ class DeletionJob(Base):
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class IdempotencyRecord(Base):
+    """Recorded outcome of a write endpoint keyed by Idempotency-Key.
+
+    The key is stored hashed; the request fingerprint lets a replayed key with a
+    different payload be rejected instead of silently executing twice.
+    """
+
+    __tablename__ = "meno_idempotency"
+    __table_args__ = (
+        UniqueConstraint("endpoint", "key_hash", name="uq_idempotency_endpoint_key"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    endpoint: Mapped[str] = mapped_column(String(64), index=True)
+    key_hash: Mapped[str] = mapped_column(String(71), index=True)
+    request_fingerprint: Mapped[str] = mapped_column(String(71))
+    response_json: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class Entity(Base):
     __tablename__ = "meno_entities"
 
@@ -272,13 +313,31 @@ class ClaimEdge(Base):
 
 
 def make_session_factory(database_url: str):
-    connect_args = {"check_same_thread": False} if database_url.startswith("sqlite") else {}
-    engine = create_engine(database_url, pool_pre_ping=True, connect_args=connect_args)
-    if database_url.startswith("sqlite"):
+    url = make_url(database_url)
+    sqlite = url.get_backend_name() == "sqlite"
+    memory = url.database in {None, "", ":memory:"} or url.query.get("mode") == "memory"
+    file_sqlite = sqlite and not memory
+    connect_args = {"check_same_thread": False, "timeout": 5} if sqlite else {}
+    pool_options = (
+        {"pool_size": 3, "max_overflow": 2, "pool_timeout": 1} if file_sqlite else {}
+    )
+    engine = create_engine(
+        database_url,
+        pool_pre_ping=True,
+        connect_args=connect_args,
+        json_serializer=lambda value: json.dumps(
+            value, ensure_ascii=False, separators=(",", ":")
+        ),
+        **pool_options,
+    )
+    if sqlite:
         @event.listens_for(engine, "connect")
         def _enable_sqlite_foreign_keys(dbapi_connection, _connection_record) -> None:
             cursor = dbapi_connection.cursor()
             cursor.execute("PRAGMA foreign_keys=ON")
+            if file_sqlite:
+                cursor.execute("PRAGMA busy_timeout=5000")
+                cursor.execute("PRAGMA cache_size=-2000")
             cursor.close()
     Base.metadata.create_all(engine)
     return sessionmaker(bind=engine, autoflush=False, expire_on_commit=False), engine

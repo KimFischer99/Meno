@@ -1,160 +1,105 @@
-# Meno production profile: single small host
+# Manual Meno deployment
 
-Configuration for running Meno as a sidecar next to Hermes on a small VPS
-(2 GB RAM, ~1 GB available). SQLite is the canonical store and vectors live in
-the Meno process; no PostgreSQL, no Qdrant, no Docker.
+For a Hermes profile on Linux, use the [installer](hermes-integration.md).
+This document covers an independently managed system service.
 
-**This directory contains no secrets.** Every credential is a `replace-with-...`
-placeholder. Fill them in on the host, in a file that is never committed.
+## SQLite and in-process vectors
 
-## Why this profile exists
-
-The default deployment (`docker-compose.yml` at the repository root) runs
-PostgreSQL and Qdrant as separate containers. Measured resident sizes make that
-unworkable here: PostgreSQL typically holds 150–250 MB, Qdrant 100–200 MB, and the
-Meno process itself 130 MB — over the budget before storing anything.
-
-This profile trades horizontal headroom for fitting on one host:
-
-| | Default | This profile |
-|---|---|---|
-| Canonical store | PostgreSQL container | SQLite file |
-| Vector view | Qdrant container | In-process, `array("f")` |
-| Processes | 3 | 1 |
-| Memory floor | ~400–600 MB | ~130 MB |
-| Per-claim vector cost | (in Qdrant) | 4.1 KB at 1024 dims |
-
-SQLite as the canonical store does not weaken the audit guarantees. What
-`Meno_SPEC.md` forbids is the *vector store* becoming the source of truth; the
-full-state replay lane (Gate Charter #12) already runs on SQLite and passes.
-
-## Memory budget
-
-```text
-Meno process baseline                    ~130 MB   (measured)
-Vectors, 1024 dims, array("f")            4.1 KB   per claim
-  5,000 claims                            ~20 MB
- 20,000 claims  (default cap)             ~80 MB
- 50,000 claims                           ~199 MB
-```
-
-`MENO_VECTOR_MAX_RESIDENT` (default 20,000) bounds the vector count. Past the cap
-writes fail and `/health/ready` reports degraded, rather than the process growing
-until the kernel kills it — an OOM kill would take the sidecar down, and Charter
-#11 requires that a sidecar failure never block Hermes. Vectors are recoverable:
-`rebuild_projection` restores them from canonical storage.
-
-`meno.service` also sets `MemoryMax=` as a kernel-level backstop. Two independent
-limits, because the application-level one only covers vectors.
-
-Retrieval scans one user's vectors, not the whole store. Measured single-user
-scans at 1024 dims: 200 claims 7.4 ms, 500 claims 15.6 ms, 2,000 claims 66.9 ms —
-inside the 1,000 ms budget of Charter #7 with room to spare.
-
-## Install
-
-Requires Python 3.11+ and git on the host.
+Requires Python 3.11+, git, Linux/systemd, and a SiliconFlow API key.
+SQLite stores canonical state; vectors are rebuilt after restart.
+The production template caps the index at 10,000 vectors (about 40 MB at 1024 dimensions),
+in addition to the Python service's memory usage.
 
 ```bash
-# 1. Fetch the repository (the Hermes host pulls updates the same way)
-sudo mkdir -p /opt/meno /var/lib/meno
-sudo chown "$USER" /opt/meno /var/lib/meno
-git clone <your-fork-url> /opt/meno
+git clone https://github.com/KimFischer99/Meno.git /opt/meno
 cd /opt/meno
-
-# 2. Virtualenv and install
 python3 -m venv .venv
-.venv/bin/pip install --upgrade pip
 .venv/bin/pip install -e .
 
-# 3. Configuration
-cp deploy/.env.production.example /etc/meno.env
-sudo chmod 600 /etc/meno.env        # contains the API token and embedding key
-sudo chown root:root /etc/meno.env
-# Now edit /etc/meno.env and replace every `replace-with-...` value.
+sudo useradd --system --home /var/lib/meno --shell /usr/sbin/nologin meno
+sudo install -d -m 700 -o meno -g meno /var/lib/meno
+sudo install -m 600 deploy/.env.production.example /etc/meno.env
+sudoedit /etc/meno.env
+```
 
-# 4. Generate the API token (32+ characters, required in production)
+Replace the API token placeholder with a random value of at least 32 characters
+and fill in the SiliconFlow key. Keep the database path absolute and outside
+temporary directories. The service stays on loopback.
+
+To generate a token locally:
+
+```bash
 python3 -c "import secrets; print(secrets.token_urlsafe(32))"
-
-# 5. Verify the configuration before installing the service
-deploy/start.sh --check
 ```
 
-`start.sh --check` loads the environment file, constructs `Settings.from_env()`,
-and exits non-zero with the reason if the profile would be unsafe.
-`Settings.validate()` refuses to start a production profile with a missing or short
-`MENO_API_TOKEN` (the API middleware skips authentication entirely when the token
-is empty), a relative or `/tmp` SQLite path (canonical state must survive a
-reboot), or an uncapped in-memory vector store.
-
-Then apply the schema once:
+The service account needs read/execute access to the checkout and virtualenv.
+Keep them outside a protected home directory, as in `/opt/meno`.
 
 ```bash
-set -a; . /etc/meno.env; set +a
-/opt/meno/.venv/bin/meno migrate
-```
-
-## Run as a service
-
-```bash
+sudo env MENO_ENV_FILE=/etc/meno.env /opt/meno/deploy/start.sh --check
+sudo sh -c 'set -a; . /etc/meno.env; set +a; /opt/meno/.venv/bin/meno migrate'
 sudo cp deploy/meno.service /etc/systemd/system/meno.service
-# Review User=, WorkingDirectory=, and MemoryMax= before enabling.
 sudo systemctl daemon-reload
 sudo systemctl enable --now meno
-systemctl status meno
-curl -s http://127.0.0.1:8765/health/ready
+curl -fsS http://127.0.0.1:8765/health/ready
 ```
 
-`/health/ready` reports `database`, `vector`, and whether the store is degraded.
-It is not behind authentication; `/v1/*` is.
+The supplied unit reads `/etc/meno.env` before switching to `User=meno`.
+It restricts writes to `/var/lib/meno` and applies a 400 MB memory ceiling.
+Adjust the vector cap and memory ceiling together if you need more capacity.
 
-## Connect Hermes
+The production template enables the deployed deterministic state/reflection
+features and evidence selection, and keeps semantic routing and layered retrieval off.
+`MENO_SNAPSHOT_BASE_INTERVAL` controls periodic full snapshots.
+Audit overflow defaults to a file next to the SQLite database;
+`MENO_AUDIT_SPILL_PATH` can override it.
 
-See [hermes-integration.md](hermes-integration.md). Three environment variables in
-the Hermes profile, no changes to the Hermes core loop.
+## PostgreSQL and Qdrant
 
-## Back up and restore
+The existing `docker-compose.yml` starts PostgreSQL and Qdrant on loopback.
+Set `MENO_DATABASE_URL` to a PostgreSQL URL and `MENO_VECTOR_MODE=qdrant`
+in the private service environment, then run `meno migrate` and start Meno.
+Do not expose the database or vector service directly to the public network.
 
-Everything durable is one SQLite file. Use SQLite's own backup so a copy taken
-mid-write is consistent:
+Keep the embedding provider/model/dimension and projection version consistent.
+Changing any of them requires a new vector collection and a canonical replay:
 
 ```bash
-sudo systemctl stop meno        # or use .backup while running
-sqlite3 /var/lib/meno/meno.db ".backup '/var/backups/meno-$(date +%F).db'"
-sudo systemctl start meno
+meno rebuild-projection --batch-size 32
 ```
 
-To restore: stop the service, put the file back, start it. Vectors rebuild from
-canonical storage on demand; they are a derived view and are not backed up.
+## Hermes
 
-## Roll back
+Install the profile plugin and set `memory.provider: meno`, as described in
+[hermes-integration.md](hermes-integration.md). The profile and sidecar must use
+the same token. Use one stable user identifier per single-user profile.
+
+## Backups and upgrades
+
+Back up the private environment file, the SQLite database, and any pending
+audit overflow file. The Hermes profile spool lives under `HERMES_HOME/meno`
+and is separate from the canonical database.
 
 ```bash
 sudo systemctl stop meno
-cd /opt/meno && git checkout <previous-tag>
-.venv/bin/pip install -e .
+sudo sqlite3 /var/lib/meno/meno.db ".backup '/var/backups/meno.db'"
+# Back up /etc/meno.env and /var/lib/meno/meno-audit-spill.jsonl if present.
 sudo systemctl start meno
 ```
 
-The canonical store is forward-compatible within a minor version. Rolling back
-across a schema change requires restoring the matching database backup.
-
-## Upgrade
+Stop the sidecar before updating the checkout. Reinstall, apply the schema,
+and restart using the same private environment:
 
 ```bash
-cd /opt/meno && git pull
+cd /opt/meno
+git pull --ff-only
 .venv/bin/pip install -e .
+sudo sh -c 'set -a; . /etc/meno.env; set +a; /opt/meno/.venv/bin/meno migrate'
 sudo systemctl restart meno
 ```
 
-Restarting drops the in-process vectors; they are rebuilt as retrieval requests
-arrive, so the first few requests after a restart may return fewer facets. The
-canonical store is untouched.
+Vectors warm in the background at startup. Initial recall can be incomplete;
+the service log reports completion or an embedding-provider failure.
 
-## Scope
-
-This profile is component-level production readiness: it runs, it is bounded, and
-it passes the correctness and safety gates. It is not a `production GO` claim —
-that additionally needs calibration, human-preference, and social-prior evidence
-which cannot exist until real traffic has been flowing. See
-`Meno_v2.0_Gate_Charter.md` §4.
+For a v3-to-v2 rollback, restore the pre-upgrade database backup.
+v2 cannot read v3 delta snapshots. Never discard a live database to downgrade.

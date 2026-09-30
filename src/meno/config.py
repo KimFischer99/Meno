@@ -81,11 +81,15 @@ class Settings:
     outbox_retry_base_seconds: float = 1.0
     outbox_retry_max_seconds: float = 300.0
     audit_buffer_max: int = 10_000
+    # Overflow file for audit events that no longer fit in the in-memory buffer.
+    # Empty means "next to the SQLite database file". Audit events are never dropped.
+    audit_spill_path: str = ""
     policy_version: str = "meno-policy-2.0.0"
     extractor_version: str = "meno-extractor-2.1.0"
     semantic_routing_enabled: bool = False
     context_activation_enabled: bool = False
     user_token_materialization_enabled: bool = False
+    user_token_snapshot_base_interval: int = 100
     preference_distribution_enabled: bool = False
     preference_distribution_v2_enabled: bool = False
     clarification_opportunities_enabled: bool = False
@@ -158,6 +162,7 @@ class Settings:
             outbox_retry_base_seconds=float(_env("MENO_OUTBOX_RETRY_BASE_SECONDS", "1")),
             outbox_retry_max_seconds=float(_env("MENO_OUTBOX_RETRY_MAX_SECONDS", "300")),
             audit_buffer_max=int(_env("MENO_AUDIT_BUFFER_MAX", "10000")),
+            audit_spill_path=_env("MENO_AUDIT_SPILL_PATH", ""),
             policy_version=_env("MENO_POLICY_VERSION", "meno-policy-2.0.0"),
             extractor_version=_env("MENO_EXTRACTOR_VERSION", "meno-extractor-2.1.0"),
             semantic_routing_enabled=_env_bool("MENO_SEMANTIC_ROUTING_ENABLED", False),
@@ -165,6 +170,7 @@ class Settings:
             user_token_materialization_enabled=_env_bool(
                 "MENO_USER_TOKEN_MATERIALIZATION_ENABLED", False
             ),
+            user_token_snapshot_base_interval=int(_env("MENO_SNAPSHOT_BASE_INTERVAL", "100")),
             preference_distribution_enabled=_env_bool(
                 "MENO_PREFERENCE_DISTRIBUTION_ENABLED", False
             ),
@@ -206,6 +212,8 @@ class Settings:
         return settings
 
     def validate(self) -> None:
+        if not 10 <= self.user_token_snapshot_base_interval <= 1000:
+            raise ValueError("MENO_SNAPSHOT_BASE_INTERVAL must be between 10 and 1000")
         if self.embedding_provider != "siliconflow":
             raise ValueError("MENO_EMBEDDING_PROVIDER must be siliconflow")
         if not re.fullmatch(r"[A-Za-z0-9./_-]+", self.embedding_model):

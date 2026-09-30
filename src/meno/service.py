@@ -4,6 +4,7 @@ import hashlib
 import json
 import logging
 import math
+import os
 import re
 import threading
 import uuid
@@ -11,11 +12,13 @@ from collections import deque
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from html import escape
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy import delete, func, select, text, update
 from sqlalchemy.dialects.postgresql import insert as postgresql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from .config import Settings
@@ -29,11 +32,13 @@ from .db import (
     DeletionJob,
     Event,
     Feedback,
+    IdempotencyRecord,
     Outbox,
     PreferenceDistribution,
     ProjectionOutbox,
     UserRevision,
     UserTokenSnapshot,
+    UserTokenSnapshotDelta,
 )
 from .extractor import ClaimCandidate, extract_claims, preference_slot
 from .reflection import PatternCandidate, derive_patterns, pattern_derivation_basis
@@ -55,6 +60,7 @@ from .semantic_router import (
     ReferenceEnvelope,
     RouterDecision,
 )
+from .snapshot_delta import apply_delta, canonical_json, content_hash, make_delta
 from .vector import VectorDocument, VectorStore
 
 PURPOSE_SCOPE = {
@@ -62,6 +68,7 @@ PURPOSE_SCOPE = {
     "task_planning": "task_planning",
     "proactive_suggestion": "proactive_suggestion",
 }
+_MAX_USER_TOKEN_DELTA_SPAN = 1000
 
 log = logging.getLogger(__name__)
 
@@ -87,6 +94,21 @@ def _aware(value: datetime) -> datetime:
 
 
 _NORMALIZE_EDGE_PUNCT = '。.!！?？,，;；:：\'"\'""" '
+
+
+def _audit_spill_path(settings: Settings) -> Path:
+    """Overflow file for audit events that no longer fit in the memory buffer.
+
+    Audit events are never dropped: overflow is appended here and merged back
+    into the database on the next successful flush.
+    """
+    if settings.audit_spill_path:
+        return Path(settings.audit_spill_path)
+    url = settings.database_url
+    if url.startswith("sqlite"):
+        raw = url.split("///", 1)[-1] or "meno.db"
+        return Path(raw).parent / "meno-audit-spill.jsonl"
+    return Path("/var/lib/meno/meno-audit-spill.jsonl")
 
 
 def _normalize_value(value: str) -> str:
@@ -204,6 +226,7 @@ class MenoService:
         self.context_activation_policy = ContextActivationPolicy()
         self._audit_buffer: deque[dict[str, Any]] = deque()
         self._audit_lock = threading.Lock()
+        self._audit_spill_path = _audit_spill_path(settings)
         # SQLite ignores FOR UPDATE SKIP LOCKED. Serialize workers within one
         # service process so the dev/test backend cannot materialize an outbox
         # row twice; PostgreSQL still provides cross-process row locking.
@@ -238,6 +261,19 @@ class MenoService:
             provided_hash = request.metadata.get("content_hash")
             if provided_hash and provided_hash != content_hash:
                 raise ValueError("content_hash mismatch")
+            watermark = self._deletion_watermark(session, request.user_id)
+            if watermark is not None and _aware(request.occurred_at) <= watermark:
+                # The user asked to be forgotten after this event happened; a queued
+                # client replay must not resurrect it.
+                return {
+                    "trace_id": trace_id,
+                    "event_id": event_id,
+                    "state_revision": self._revision(session, request.user_id),
+                    "policy_version": self.settings.policy_version,
+                    "accepted": False,
+                    "skipped": True,
+                    "reason": "before_deletion_watermark",
+                }
             event = Event(
                 id=event_id,
                 user_id=request.user_id,
@@ -260,17 +296,49 @@ class MenoService:
                 )
             )
             revision = self._bump_revision(session, request.user_id)
-            self._audit(
-                session,
-                event_name="meno.ingest.accepted",
-                trace_id=trace_id,
-                user_id=request.user_id,
-                action="ingest",
-                purpose=None,
-                decision={"allowed": True, "role": request.content.role},
-                revision=revision,
-                event_ids=[event_id],
-            )
+            try:
+                self._audit(
+                    session,
+                    event_name="meno.ingest.accepted",
+                    trace_id=trace_id,
+                    user_id=request.user_id,
+                    action="ingest",
+                    purpose=None,
+                    decision={"allowed": True, "role": request.content.role},
+                    revision=revision,
+                    event_ids=[event_id],
+                )
+            except IntegrityError as exc:
+                # A concurrent request inserting the same event_id may already have
+                # committed between our idempotency check above and this flush.
+                # Re-open a fresh transaction and reconcile: if the row now exists
+                # with identical content, treat this as an idempotent replay instead
+                # of surfacing a 500 that silently drops the event.
+                log.warning(
+                    "ingest idempotency race caught for event_id=%s; reconciling",
+                    event_id,
+                )
+                session.rollback()
+                with self.session_factory() as check:
+                    winner = check.get(Event, event_id)
+                    if winner is not None:
+                        if (
+                            winner.user_id != request.user_id
+                            or winner.content_hash != _sha(request.content.text)
+                        ):
+                            raise ValueError(
+                                "event_id already exists with different content"
+                            ) from exc
+                        replay_revision = self._revision(check, request.user_id)
+                        return {
+                            "trace_id": trace_id,
+                            "event_id": event_id,
+                            "state_revision": replay_revision,
+                            "policy_version": self.settings.policy_version,
+                            "accepted": True,
+                            "idempotent_replay": True,
+                        }
+                raise
         return {
             "trace_id": trace_id,
             "event_id": event_id,
@@ -1880,13 +1948,21 @@ class MenoService:
             policy_version=self.settings.policy_version,
         )
 
-    def feedback(self, request: FeedbackRequest) -> dict[str, Any]:
+    def feedback(
+        self, request: FeedbackRequest, *, idempotency_key: str = ""
+    ) -> dict[str, Any]:
         if request.action == "correct" and not request.correction:
             raise ValueError("correction is required for correct action")
         trace_id = _id()
+        fingerprint = _sha(request.model_dump_json())
         new_claim_id: str | None = None
         old_claim_id = request.claim_id
         with self.session_factory.begin() as session:
+            replay = self._idempotent_replay(
+                session, endpoint="feedback", key=idempotency_key, fingerprint=fingerprint
+            )
+            if replay is not None:
+                return replay
             claim = session.get(Claim, request.claim_id)
             if claim is None or claim.user_id != request.user_id:
                 raise LookupError("claim not found")
@@ -2029,18 +2105,34 @@ class MenoService:
                 event_ids=[],
             )
             self._materialize_user_state(session, request.user_id, revision)
+            result = {
+                "trace_id": trace_id,
+                "state_revision": revision,
+                "claim_id": new_claim_id or old_claim_id,
+                "superseded_claim_id": old_claim_id if new_claim_id else None,
+                "policy_version": self.settings.policy_version,
+            }
+            self._record_idempotency(
+                session,
+                endpoint="feedback",
+                key=idempotency_key,
+                fingerprint=fingerprint,
+                response=result,
+            )
         self.process_projection_outbox()
-        return {
-            "trace_id": trace_id,
-            "state_revision": revision,
-            "claim_id": new_claim_id or old_claim_id,
-            "superseded_claim_id": old_claim_id if new_claim_id else None,
-            "policy_version": self.settings.policy_version,
-        }
+        return result
 
-    def set_consent(self, request: ConsentRequest) -> dict[str, Any]:
+    def set_consent(
+        self, request: ConsentRequest, *, idempotency_key: str = ""
+    ) -> dict[str, Any]:
         trace_id = _id()
+        fingerprint = _sha(request.model_dump_json())
         with self.session_factory.begin() as session:
+            replay = self._idempotent_replay(
+                session, endpoint="consent", key=idempotency_key, fingerprint=fingerprint
+            )
+            if replay is not None:
+                return replay
             consent = Consent(
                 id=_id(),
                 user_id=request.user_id,
@@ -2066,14 +2158,24 @@ class MenoService:
                 event_ids=[],
             )
             self._materialize_user_state(session, request.user_id, revision)
-        return {
-            "trace_id": trace_id,
-            "consent_id": consent.id,
-            "state_revision": revision,
-            "policy_version": self.settings.policy_version,
-        }
+            result = {
+                "trace_id": trace_id,
+                "consent_id": consent.id,
+                "state_revision": revision,
+                "policy_version": self.settings.policy_version,
+            }
+            self._record_idempotency(
+                session,
+                endpoint="consent",
+                key=idempotency_key,
+                fingerprint=fingerprint,
+                response=result,
+            )
+        return result
 
-    def delete(self, request: DeletionRequest) -> dict[str, Any]:
+    def delete(
+        self, request: DeletionRequest, *, idempotency_key: str = ""
+    ) -> dict[str, Any]:
         if request.scope == "source" and not request.source:
             raise ValueError("source is required")
         if request.scope == "claim" and not request.claim_id:
@@ -2081,7 +2183,13 @@ class MenoService:
         job_id = _id()
         subject_hash = _sha(request.user_id)
         trace_id = _id()
+        fingerprint = _sha(request.model_dump_json())
         with self.session_factory.begin() as session:
+            replay = self._idempotent_replay(
+                session, endpoint="deletion", key=idempotency_key, fingerprint=fingerprint
+            )
+            if replay is not None:
+                return replay
             job = DeletionJob(id=job_id, subject_hash=subject_hash, scope=request.scope)
             session.add(job)
             if request.scope == "claim":
@@ -2107,6 +2215,11 @@ class MenoService:
                 )
             else:
                 self._enqueue_projection_delete_user(session, request.user_id)
+                session.execute(
+                    delete(UserTokenSnapshotDelta).where(
+                        UserTokenSnapshotDelta.user_id == request.user_id
+                    )
+                )
                 session.execute(
                     delete(UserTokenSnapshot).where(UserTokenSnapshot.user_id == request.user_id)
                 )
@@ -2137,14 +2250,22 @@ class MenoService:
             )
             if request.scope != "all":
                 self._materialize_user_state(session, request.user_id, revision)
+            result = {
+                "trace_id": trace_id,
+                "deletion_job_id": job_id,
+                "state_revision": revision,
+                "receipt_hash": receipt,
+                "status": "completed",
+            }
+            self._record_idempotency(
+                session,
+                endpoint="deletion",
+                key=idempotency_key,
+                fingerprint=fingerprint,
+                response=result,
+            )
         self.process_projection_outbox()
-        return {
-            "trace_id": trace_id,
-            "deletion_job_id": job_id,
-            "state_revision": revision,
-            "receipt_hash": receipt,
-            "status": "completed",
-        }
+        return result
 
     def audit_claim(self, claim_id: str) -> dict[str, Any]:
         with self.session_factory() as session:
@@ -2212,14 +2333,10 @@ class MenoService:
 
     def user_token(self, user_id: str, revision: int | None = None) -> dict[str, Any]:
         with self.session_factory() as session:
-            statement = select(UserTokenSnapshot).where(UserTokenSnapshot.user_id == user_id)
-            if revision is not None:
-                statement = statement.where(UserTokenSnapshot.state_revision == revision)
-            else:
-                statement = statement.order_by(UserTokenSnapshot.state_revision.desc())
-            snapshot = session.scalar(statement.limit(1))
+            snapshot = self._user_snapshot_record(session, user_id, revision=revision)
             if snapshot is None:
                 raise LookupError("user token snapshot not found")
+            payload = self._read_user_snapshot_payload(session, snapshot)
             return {
                 "snapshot_id": snapshot.id,
                 "user_id": snapshot.user_id,
@@ -2228,8 +2345,126 @@ class MenoService:
                 "policy_version": snapshot.policy_version,
                 "extractor_version": snapshot.extractor_version,
                 "content_hash": snapshot.content_hash,
-                "payload": snapshot.payload,
+                "payload": payload,
             }
+
+    @staticmethod
+    def _user_snapshot_record(
+        session: Session,
+        user_id: str,
+        *,
+        revision: int | None = None,
+        before_revision: int | None = None,
+    ) -> UserTokenSnapshot | UserTokenSnapshotDelta | None:
+        base_query = select(UserTokenSnapshot).where(UserTokenSnapshot.user_id == user_id)
+        delta_query = select(UserTokenSnapshotDelta).where(
+            UserTokenSnapshotDelta.user_id == user_id
+        )
+        if revision is not None:
+            base_query = base_query.where(UserTokenSnapshot.state_revision == revision)
+            delta_query = delta_query.where(UserTokenSnapshotDelta.state_revision == revision)
+        elif before_revision is not None:
+            base_query = base_query.where(
+                UserTokenSnapshot.state_revision < before_revision
+            ).order_by(UserTokenSnapshot.state_revision.desc())
+            delta_query = delta_query.where(
+                UserTokenSnapshotDelta.state_revision < before_revision
+            ).order_by(UserTokenSnapshotDelta.state_revision.desc())
+        else:
+            base_query = base_query.order_by(UserTokenSnapshot.state_revision.desc())
+            delta_query = delta_query.order_by(UserTokenSnapshotDelta.state_revision.desc())
+        base = session.scalar(base_query.limit(1))
+        delta = session.scalar(delta_query.limit(1))
+        if base is not None and delta is not None and base.state_revision == delta.state_revision:
+            raise ValueError("user token revision has both base and delta records")
+        records = [record for record in (base, delta) if record is not None]
+        return max(records, key=lambda record: record.state_revision) if records else None
+
+    def _read_user_snapshot_payload(
+        self, session: Session, target: UserTokenSnapshot | UserTokenSnapshotDelta
+    ) -> dict[str, Any]:
+        if isinstance(target, UserTokenSnapshot):
+            payload = target.payload
+            if (
+                not isinstance(payload, dict)
+                or payload.get("user_id") != target.user_id
+                or payload.get("state_revision") != target.state_revision
+                or content_hash(payload) != target.content_hash
+            ):
+                raise ValueError("user token base hash or metadata mismatch")
+            return payload
+
+        base_revision = target.base_revision
+        if (
+            base_revision >= target.state_revision
+            or target.state_revision - base_revision > _MAX_USER_TOKEN_DELTA_SPAN
+        ):
+            raise ValueError("user token delta has an invalid base revision")
+        base = session.scalar(
+            select(UserTokenSnapshot).where(
+                UserTokenSnapshot.user_id == target.user_id,
+                UserTokenSnapshot.state_revision == base_revision,
+            )
+        )
+        if base is None or not isinstance(base.payload, dict):
+            raise ValueError("user token delta base is missing")
+        if (
+            base.payload.get("user_id") != base.user_id
+            or base.payload.get("state_revision") != base.state_revision
+            or content_hash(base.payload) != base.content_hash
+        ):
+            raise ValueError("user token base hash or metadata mismatch")
+        competing_base = session.scalar(
+            select(UserTokenSnapshotDelta.id).where(
+                UserTokenSnapshotDelta.user_id == target.user_id,
+                UserTokenSnapshotDelta.state_revision == base_revision,
+            )
+        )
+        if competing_base is not None:
+            raise ValueError("user token base revision also has a delta")
+        intervening_bases = session.scalars(
+            select(UserTokenSnapshot.state_revision).where(
+                UserTokenSnapshot.user_id == target.user_id,
+                UserTokenSnapshot.state_revision > base_revision,
+                UserTokenSnapshot.state_revision <= target.state_revision,
+            )
+        ).all()
+        if intervening_bases:
+            raise ValueError("user token delta chain crosses another base")
+        deltas = session.scalars(
+            select(UserTokenSnapshotDelta)
+            .where(
+                UserTokenSnapshotDelta.user_id == target.user_id,
+                UserTokenSnapshotDelta.state_revision > base_revision,
+                UserTokenSnapshotDelta.state_revision <= target.state_revision,
+            )
+            .order_by(UserTokenSnapshotDelta.state_revision)
+        ).yield_per(32)
+
+        payload = base.payload
+        previous_revision = base_revision
+        last_delta_id = None
+        for delta_count, delta in enumerate(deltas, 1):
+            if delta_count > _MAX_USER_TOKEN_DELTA_SPAN:
+                raise ValueError("user token delta chain exceeds the safety limit")
+            if (
+                delta.base_revision != base_revision
+                or delta.previous_revision != previous_revision
+                or delta.state_revision <= previous_revision
+                or (delta.schema_version, delta.policy_version, delta.extractor_version)
+                != (base.schema_version, base.policy_version, base.extractor_version)
+            ):
+                raise ValueError("user token delta chain is broken")
+            payload = apply_delta(payload, delta.delta, delta.user_id, delta.state_revision)
+            previous_revision = delta.state_revision
+            last_delta_id = delta.id
+        if (
+            previous_revision != target.state_revision
+            or last_delta_id != target.id
+            or content_hash(payload) != target.content_hash
+        ):
+            raise ValueError("user token delta target is unreachable or has a hash mismatch")
+        return payload
 
     def diff_user_tokens(
         self, user_id: str, from_revision: int, to_revision: int
@@ -2939,7 +3174,7 @@ class MenoService:
                 ),
             },
         }
-        canonical = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        snapshot_hash = content_hash(payload)
         snapshot_id = str(
             uuid.uuid5(
                 uuid.NAMESPACE_URL,
@@ -2949,27 +3184,97 @@ class MenoService:
                 ),
             )
         )
-        snapshot = UserTokenSnapshot(
-            id=snapshot_id,
-            user_id=user_id,
-            state_revision=revision,
-            schema_version="1.0.0",
-            policy_version=self.settings.policy_version,
-            extractor_version=self.settings.extractor_version,
-            payload=payload,
-            content_hash=_sha(canonical),
-        )
-        existing = session.scalar(
-            select(UserTokenSnapshot).where(
-                UserTokenSnapshot.user_id == user_id,
-                UserTokenSnapshot.state_revision == revision,
-            )
-        )
-        if existing is None:
-            session.add(snapshot)
+        schema_version = "1.0.0"
+        existing = self._user_snapshot_record(session, user_id, revision=revision)
+        if existing is not None:
+            existing_payload = self._read_user_snapshot_payload(session, existing)
+            if (
+                existing.id != snapshot_id
+                or existing.content_hash != snapshot_hash
+                or existing.schema_version != schema_version
+                or existing.policy_version != self.settings.policy_version
+                or existing.extractor_version != self.settings.extractor_version
+                or canonical_json(existing_payload) != canonical_json(payload)
+            ):
+                raise ValueError("user token revision is not deterministic")
             return
-        if existing.content_hash != snapshot.content_hash:
-            raise ValueError("user token revision is not deterministic")
+
+        interval = self.settings.user_token_snapshot_base_interval
+        if interval <= 0:
+            raise ValueError("user token snapshot base interval must be positive")
+        previous = self._user_snapshot_record(
+            session, user_id, before_revision=revision
+        )
+        is_base = previous is None
+        base_revision = revision
+        delta_payload = None
+        if previous is not None:
+            if revision <= previous.state_revision:
+                raise ValueError("user token revisions must increase")
+            previous_base_revision = (
+                previous.state_revision
+                if isinstance(previous, UserTokenSnapshot)
+                else previous.base_revision
+            )
+            base_revision = previous_base_revision
+            same_versions = (
+                previous.schema_version == schema_version
+                and previous.policy_version == self.settings.policy_version
+                and previous.extractor_version == self.settings.extractor_version
+            )
+            is_base = not same_versions or revision - base_revision >= interval
+            if not is_base:
+                previous_payload = self._read_user_snapshot_payload(session, previous)
+                delta_payload = make_delta(previous_payload, payload)
+                if delta_payload is None:
+                    log.warning(
+                        "user token snapshot: delta not representable at rev=%s, storing full base",
+                        revision,
+                    )
+                is_base = delta_payload is None
+
+        if is_base:
+            session.add(
+                UserTokenSnapshot(
+                    id=snapshot_id,
+                    user_id=user_id,
+                    state_revision=revision,
+                    schema_version=schema_version,
+                    policy_version=self.settings.policy_version,
+                    extractor_version=self.settings.extractor_version,
+                    payload=payload,
+                    content_hash=snapshot_hash,
+                )
+            )
+        else:
+            assert previous is not None and delta_payload is not None
+            session.add(
+                UserTokenSnapshotDelta(
+                    id=snapshot_id,
+                    user_id=user_id,
+                    state_revision=revision,
+                    base_revision=base_revision,
+                    previous_revision=previous.state_revision,
+                    delta=delta_payload,
+                    content_hash=snapshot_hash,
+                    schema_version=schema_version,
+                    policy_version=self.settings.policy_version,
+                    extractor_version=self.settings.extractor_version,
+                )
+            )
+        if is_base:
+            log.info(
+                "user token snapshot: base rev=%s claims=%s",
+                revision,
+                len(payload.get("active_state") or []),
+            )
+        else:
+            log.info(
+                "user token snapshot: delta rev=%s base_rev=%s",
+                revision,
+                base_revision,
+            )
+        session.flush()
 
     @staticmethod
     def _is_ambiguous_preference(value: str) -> bool:
@@ -3047,18 +3352,14 @@ class MenoService:
     ) -> list[ClarificationOpportunity]:
         if not self.settings.clarification_opportunities_enabled:
             return []
-        snapshot = session.scalar(
-            select(UserTokenSnapshot)
-            .where(UserTokenSnapshot.user_id == request.user_id)
-            .order_by(UserTokenSnapshot.state_revision.desc())
-            .limit(1)
-        )
+        snapshot = self._user_snapshot_record(session, request.user_id)
         if snapshot is None:
             return []
+        payload = self._read_user_snapshot_payload(session, snapshot)
         result: list[ClarificationOpportunity] = []
         context = f"{request.context.task_type or ''} {request.context.query}"
         query_slot = preference_slot(context.replace("_", " "))
-        for item in snapshot.payload.get("clarification_opportunities", []):
+        for item in payload.get("clarification_opportunities", []):
             if item.get("routing_slot") and item["routing_slot"] != query_slot:
                 continue
             result.append(ClarificationOpportunity.model_validate(item))
@@ -3095,29 +3396,143 @@ class MenoService:
         session.flush()
         return row.revision
 
+    def _audit_spill_file(self) -> Path:
+        return self._audit_spill_path
+
+    def _spill_audit_event(self, entry: dict[str, Any]) -> bool:
+        """Persist one overflowed audit event. Audit events are never dropped."""
+        path = self._audit_spill_file()
+        try:
+            with open(path, "a", encoding="utf-8") as handle:
+                handle.write(json.dumps(entry, ensure_ascii=False, default=str) + "\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+        except OSError:
+            log.exception("audit spill write failed; event stays in the memory buffer")
+            return False
+        return True
+
+    def _read_spilled_audit_events(self) -> list[dict[str, Any]] | None:
+        path = self._audit_spill_file()
+        if not path.exists():
+            return []
+        entries: list[dict[str, Any]] = []
+        try:
+            with open(path, encoding="utf-8") as handle:
+                for line in handle:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        entries.append(json.loads(line))
+                    except json.JSONDecodeError:
+                        log.error("audit spill is not valid JSON; retained for recovery")
+                        return None
+        except OSError:
+            log.exception("audit spill read failed")
+            return None
+        return entries
+
+    def _clear_audit_spill(self) -> None:
+        try:
+            self._audit_spill_file().unlink(missing_ok=True)
+        except OSError:
+            log.warning("audit spill cleanup failed for %s", self._audit_spill_file())
+
+    def _deletion_watermark(self, session: Session, user_id: str) -> datetime | None:
+        """Cutoff for client replays: newest completed full-user deletion."""
+        value = session.scalar(
+            select(DeletionJob.completed_at)
+            .where(
+                DeletionJob.subject_hash == _sha(user_id),
+                DeletionJob.scope == "all",
+                DeletionJob.status == "completed",
+                DeletionJob.completed_at.is_not(None),
+            )
+            .order_by(DeletionJob.completed_at.desc())
+            .limit(1)
+        )
+        return _aware(value) if value is not None else None
+
+    def _idempotent_replay(
+        self,
+        session: Session,
+        *,
+        endpoint: str,
+        key: str,
+        fingerprint: str,
+    ) -> dict[str, Any] | None:
+        if not key:
+            return None
+        row = session.scalar(
+            select(IdempotencyRecord).where(
+                IdempotencyRecord.endpoint == endpoint,
+                IdempotencyRecord.key_hash == _sha(key),
+            )
+        )
+        if row is None:
+            return None
+        if row.request_fingerprint != fingerprint:
+            raise ValueError("Idempotency-Key reused with a different payload")
+        payload = json.loads(row.response_json)
+        payload["idempotent_replay"] = True
+        return payload
+
+    def _record_idempotency(
+        self,
+        session: Session,
+        *,
+        endpoint: str,
+        key: str,
+        fingerprint: str,
+        response: dict[str, Any],
+    ) -> None:
+        if not key:
+            return
+        session.add(
+            IdempotencyRecord(
+                id=_id(),
+                endpoint=endpoint,
+                key_hash=_sha(key),
+                request_fingerprint=fingerprint,
+                response_json=json.dumps(response, ensure_ascii=False, default=str),
+            )
+        )
+
     def _buffer_audit(self, **entry: Any) -> None:
         with self._audit_lock:
             if len(self._audit_buffer) >= self.settings.audit_buffer_max:
-                self._audit_buffer.popleft()
-                log.warning("audit buffer full; dropping oldest buffered audit event")
+                # Integrity first: the oldest buffered event goes to disk, never away.
+                spilled = self._audit_buffer.popleft()
+                if not self._spill_audit_event(spilled):
+                    self._audit_buffer.appendleft(spilled)
             self._audit_buffer.append(entry)
+            if len(self._audit_buffer) > self.settings.audit_buffer_max:
+                log.warning("audit buffer full; retained overflow in memory after spill failure")
 
     def flush_audit_buffer(self) -> int:
+        # ponytail: one process lock also covers spill I/O; use a durable queue
+        # if multiple processes ever need to share an overflow file.
         with self._audit_lock:
-            batch = list(self._audit_buffer)
+            spilled = self._read_spilled_audit_events()
+            if spilled is None:
+                return 0
+            buffered = list(self._audit_buffer)
+            batch = spilled + buffered  # spilled events are older; keep append order
+            if not batch:
+                return 0
             self._audit_buffer.clear()
-        if not batch:
-            return 0
-        try:
-            with self.session_factory.begin() as session:
-                for entry in batch:
-                    self._audit(session, **entry)
-        except Exception:  # buffered audits must survive transient DB failures
-            log.exception("audit flush failed; rebuffering %d events", len(batch))
-            with self._audit_lock:
-                self._audit_buffer.extendleft(reversed(batch))
-            return 0
-        return len(batch)
+            try:
+                with self.session_factory.begin() as session:
+                    for entry in batch:
+                        self._audit(session, **entry)
+            except Exception:  # buffered audits must survive transient DB failures
+                log.exception("audit flush failed; rebuffering %d events", len(batch))
+                # Spilled entries stay on disk; restore only the in-memory entries.
+                self._audit_buffer.extendleft(reversed(buffered))
+                return 0
+            self._clear_audit_spill()
+            return len(batch)
 
     def _audit(
         self,

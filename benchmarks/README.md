@@ -1,5 +1,10 @@
 # Benchmark protocol
 
+These historical evaluation tools are retained for reproducibility and are not
+required for v3 installation. Generated results and corpora under `artifacts/`
+are local-only. Tests requiring archived caches skip when files are absent;
+synthetic checks remain runnable.
+
 > **PersonaMem no longer gates this project.** As of 2026-08-27 it is regression
 > monitoring only -- useful for "did a change break existing behavior", not for
 > "is the user model better". Decisive tokens appear in 8.7% of queries, 55.5% of

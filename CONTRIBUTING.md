@@ -15,9 +15,9 @@ so the suite runs offline with no credentials.
 ## What this project optimizes for
 
 Meno's value proposition is that injected memory is auditable, revocable, and
-explainable — not that it scores well on a benchmark. Changes are evaluated against
-the gates in `Meno_v2.0_Gate_Charter.md`, which are transcribed from
-`Meno_SPEC.md`'s own acceptance criteria.
+explainable — not that it scores well on a benchmark. Preserve user isolation,
+consent, deletion, evidence lineage, and outage recovery. Use focused checks for
+the behavior being changed; routine fixes do not need a new benchmark campaign.
 
 Two conventions follow from that, and they are unusual enough to state plainly:
 
@@ -60,8 +60,8 @@ open a public issue for a disclosure bug.
   database files. Benchmark corpora are gitignored and are not redistributed.
 - Test fixtures use synthetic data. If you need a realistic case, write one rather
   than pasting a real transcript.
-- Result artifacts committed under `artifacts/` must not contain message text; the
-  existing validators report findings by location for this reason.
+- Keep result artifacts under the ignored `artifacts/` directory. They may contain
+  rendered memory context and must not be added to source distributions.
 
 ## License
 
