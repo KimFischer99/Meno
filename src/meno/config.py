@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import os
 import re
-import stat
 from dataclasses import dataclass, field
-from pathlib import Path
 
 
 def _env(name: str, default: str) -> str:
@@ -20,32 +18,6 @@ def _env_bool(name: str, default: bool) -> bool:
     raise ValueError(f"{name} must be a boolean")
 
 
-def _read_google_credentials(path_value: str) -> dict[str, str]:
-    if not path_value:
-        return {}
-    path = Path(path_value).expanduser()
-    if not path.is_file():
-        raise ValueError(f"Google credentials file does not exist: {path}")
-    result: dict[str, str] = {}
-    for raw_line in path.read_text(encoding="utf-8").splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#"):
-            continue
-        separator = ":" if ":" in line else ("=" if "=" in line else "")
-        if not separator:
-            if "key" in result:
-                raise ValueError("Google credentials file contains an unlabelled extra value")
-            result["key"] = line
-            continue
-        label, value = line.split(separator, 1)
-        normalized = label.strip().casefold().replace("_", " ")
-        if normalized in {"key", "api key", "google api key", "gemini api key"}:
-            result["key"] = value.strip()
-        elif normalized in {"model", "embedding model", "google embedding model"}:
-            result["model"] = value.strip()
-    return result
-
-
 @dataclass(frozen=True)
 class Settings:
     environment: str = "development"
@@ -57,14 +29,6 @@ class Settings:
     embedding_model: str = "BAAI/bge-m3"
     embedding_dimension: int = 1024
     embedding_projection_version: str = "siliconflow-bge-m3-1024-v1"
-    google_credentials_file: str = ""
-    google_api_key: str = field(default="", repr=False)
-    google_api_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
-    google_timeout_seconds: float = 15.0
-    google_batch_size: int = 32
-    google_max_retries: int = 4
-    google_circuit_breaker_threshold: int = 3
-    google_circuit_breaker_seconds: float = 30.0
     openai_api_key: str = field(default="", repr=False)
     openai_base_url: str = "https://api.siliconflow.cn/v1"
     openai_timeout_seconds: float = 15.0
@@ -116,8 +80,6 @@ class Settings:
 
     @classmethod
     def from_env(cls) -> Settings:
-        credentials_file = _env("MENO_GOOGLE_CREDENTIALS_FILE", "")
-        credentials = _read_google_credentials(credentials_file)
         explicit_model = _env("MENO_EMBEDDING_MODEL", "")
         settings = cls(
             environment=_env("MENO_ENV", "development"),
@@ -126,25 +88,12 @@ class Settings:
             qdrant_url=_env("MENO_QDRANT_URL", "http://127.0.0.1:6333"),
             qdrant_collection=_env("MENO_QDRANT_COLLECTION", "meno_claims_bge_m3_1024_v1"),
             embedding_provider=_env("MENO_EMBEDDING_PROVIDER", "siliconflow"),
-            embedding_model=explicit_model or credentials.get("model", "BAAI/bge-m3"),
+            embedding_model=explicit_model or "BAAI/bge-m3",
             embedding_dimension=int(_env("MENO_EMBEDDING_DIMENSION", "1024")),
             embedding_projection_version=_env(
                 "MENO_EMBEDDING_PROJECTION_VERSION",
                 "siliconflow-bge-m3-1024-v1",
             ),
-            google_credentials_file=credentials_file,
-            google_api_key=_env("MENO_GOOGLE_API_KEY", "") or credentials.get("key", ""),
-            google_api_base_url=_env(
-                "MENO_GOOGLE_API_BASE_URL",
-                "https://generativelanguage.googleapis.com/v1beta",
-            ).rstrip("/"),
-            google_timeout_seconds=float(_env("MENO_GOOGLE_TIMEOUT_SECONDS", "15")),
-            google_batch_size=int(_env("MENO_GOOGLE_BATCH_SIZE", "32")),
-            google_max_retries=int(_env("MENO_GOOGLE_MAX_RETRIES", "4")),
-            google_circuit_breaker_threshold=int(
-                _env("MENO_GOOGLE_CIRCUIT_BREAKER_THRESHOLD", "3")
-            ),
-            google_circuit_breaker_seconds=float(_env("MENO_GOOGLE_CIRCUIT_BREAKER_SECONDS", "30")),
             openai_api_key=_env("MENO_OPENAI_API_KEY", ""),
             openai_base_url=_env("MENO_OPENAI_BASE_URL", "https://api.siliconflow.cn/v1").rstrip(
                 "/"
@@ -222,18 +171,8 @@ class Settings:
             raise ValueError("embedding dimension must be between 128 and 3072")
         if not self.embedding_projection_version:
             raise ValueError("MENO_EMBEDDING_PROJECTION_VERSION is required")
-        if not 1 <= self.google_batch_size <= 128:
-            raise ValueError("MENO_GOOGLE_BATCH_SIZE must be between 1 and 128")
         if not 1 <= self.vector_upsert_batch_size <= 256:
             raise ValueError("MENO_VECTOR_UPSERT_BATCH_SIZE must be between 1 and 256")
-        if self.google_timeout_seconds <= 0:
-            raise ValueError("MENO_GOOGLE_TIMEOUT_SECONDS must be positive")
-        if not 0 <= self.google_max_retries <= 8:
-            raise ValueError("MENO_GOOGLE_MAX_RETRIES must be between 0 and 8")
-        if not 1 <= self.google_circuit_breaker_threshold <= 32:
-            raise ValueError("MENO_GOOGLE_CIRCUIT_BREAKER_THRESHOLD must be between 1 and 32")
-        if self.google_circuit_breaker_seconds <= 0:
-            raise ValueError("MENO_GOOGLE_CIRCUIT_BREAKER_SECONDS must be positive")
         if not 1 <= self.openai_batch_size <= 128:
             raise ValueError("MENO_OPENAI_BATCH_SIZE must be between 1 and 128")
         if self.openai_timeout_seconds <= 0:
@@ -286,14 +225,6 @@ class Settings:
             raise ValueError(
                 "MENO_EVIDENCE_SELECTION_REDUNDANCY_PENALTY must be between 0 and 1"
             )
-        if self.google_credentials_file:
-            path = Path(self.google_credentials_file).expanduser()
-            if not path.is_file():
-                raise ValueError(f"Google credentials file does not exist: {path}")
-            if self.environment == "production":
-                mode = stat.S_IMODE(path.stat().st_mode)
-                if mode & 0o077:
-                    raise ValueError("Google credentials file must not be group/world accessible")
         if self.vector_mode not in {"memory", "qdrant"}:
             raise ValueError("MENO_VECTOR_MODE must be memory or qdrant")
         if self.vector_max_resident < 0:

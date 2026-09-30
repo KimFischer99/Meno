@@ -8,9 +8,11 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 import meno.service as service_module
+from benchmarks.verify_invariants import audit_chain_summary
 from meno.api import create_app
 from meno.config import Settings
 from meno.db import AuditEvent
+from meno.schemas import IngestRequest
 from tests.fakes import TestEmbedder
 
 
@@ -299,4 +301,53 @@ def test_audit_hash_chain_does_not_fork_with_timestamp_ties(app, monkeypatch):
     assert sum(row.prev_hash is None for row in rows) == 1
     assert len(predecessors) == len(set(predecessors))
     assert [row.created_at for row in rows] == sorted({row.created_at for row in rows})
+    service.close()
+
+
+def test_audit_hash_chain_does_not_fork_under_concurrent_ingest(app):
+    # SQLite has no advisory lock, so ingest transactions serialize on the
+    # audit chain lock; every head read must observe committed rows.
+    service = app.state.meno
+    workers, per_worker = 8, 6
+
+    def ingest_worker(worker: int) -> None:
+        for index in range(per_worker):
+            service.ingest(
+                IngestRequest(
+                    user_id=f"user-{worker}",
+                    event_id=f"race-{worker}-{index}",
+                    source={"type": "hermes_turn", "profile": "meno-test", "session_id": "s1"},
+                    content={"role": "user", "text": f"concurrency probe {worker} {index}"},
+                    consent_scope=["personalization"],
+                ),
+                f"race-key-{worker}-{index}",
+            )
+
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        list(executor.map(ingest_worker, range(workers)))
+
+    with service.session_factory() as session:
+        rows = session.scalars(select(AuditEvent)).all()
+    summary = audit_chain_summary(
+        [
+            {
+                "event_name": row.event_name,
+                "trace_id": row.trace_id,
+                "user_hash": row.user_hash,
+                "claim_id": row.claim_id,
+                "action": row.action,
+                "purpose": row.purpose,
+                "decision": row.decision,
+                "state_revision": row.state_revision,
+                "source_event_ids": row.source_event_ids,
+                "prev_hash": row.prev_hash,
+                "current_hash": row.current_hash,
+            }
+            for row in rows
+        ]
+    )
+    assert summary["roots"] == 1
+    assert summary["forks"] == 0
+    assert summary["dangling"] == 0
+    assert summary["hash_mismatch"] == 0
     service.close()

@@ -3,6 +3,8 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
+import pytest
+
 from benchmarks.run_semantic_router_a3_development import load_prototypes
 from benchmarks.run_semantic_router_a4_development import (
     DEFAULT_A31_ARTIFACT,
@@ -28,6 +30,13 @@ from meno.semantic_router import (
 from tests.fakes import TestEmbedder
 
 ROOT = Path(__file__).parent.parent
+
+# The archive-backed tests below replay the a31 provider-holdout run, whose
+# result file under artifacts/ is local-only (see benchmarks/README.md).
+requires_a31_artifact = pytest.mark.skipif(
+    not DEFAULT_A31_ARTIFACT.is_file(),
+    reason="Historical a31 holdout artifact is local-only; archive-backed tests skip offline",
+)
 
 
 def _annotated_prototypes() -> tuple[object, ...]:
@@ -59,6 +68,7 @@ def test_a5_diagnostics_annotates_every_anchor_with_role_and_polarity() -> None:
         }
 
 
+@requires_a31_artifact
 def test_a5_diagnostics_baseline_matches_ensemble_top2_mean() -> None:
     prototypes = _annotated_prototypes()
     _, cases, _ = load_a4_development(
@@ -94,6 +104,7 @@ def test_a5_diagnostics_baseline_matches_ensemble_top2_mean() -> None:
     ) < 1e-12
 
 
+@requires_a31_artifact
 def test_a5_topic_gated_strategy_scores_the_full_development_fixture() -> None:
     prototypes = _annotated_prototypes()
     _, cases, _ = load_a4_development(
@@ -142,6 +153,7 @@ def test_a5_topic_gated_strategy_scores_the_full_development_fixture() -> None:
     assert provider_coverage(cases, designed)["passed"] is True
 
 
+@requires_a31_artifact
 def test_a5_topic_gated_dimension_score_is_topic_only() -> None:
     prototypes = _annotated_prototypes()
     strategy = TopicGatedStrategy(TestEmbedder(dimension=128), prototypes)

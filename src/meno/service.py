@@ -227,6 +227,15 @@ class MenoService:
         self._audit_buffer: deque[dict[str, Any]] = deque()
         self._audit_lock = threading.Lock()
         self._audit_spill_path = _audit_spill_path(settings)
+        # The audit hash chain reads the newest row's current_hash as prev_hash.
+        # PostgreSQL serializes that read-modify-write across processes with an
+        # advisory lock held to transaction end, but SQLite has no equivalent:
+        # a second transaction reading before the first commits would link to
+        # the same head and fork the chain. Every transaction that appends audit
+        # rows holds this lock until it commits, so a head read always observes
+        # committed rows. Re-entrant because _audit also takes it (and because
+        # the outbox chunk recurses on poison rows).
+        self._audit_chain_lock = threading.RLock()
         # SQLite ignores FOR UPDATE SKIP LOCKED. Serialize workers within one
         # service process so the dev/test backend cannot materialize an outbox
         # row twice; PostgreSQL still provides cross-process row locking.
@@ -241,7 +250,7 @@ class MenoService:
     def ingest(self, request: IngestRequest, idempotency_key: str) -> dict[str, Any]:
         event_id = request.event_id or _id()
         trace_id = str(request.metadata.get("trace_id") or _id())
-        with self.session_factory.begin() as session:
+        with self._audit_chain_lock, self.session_factory.begin() as session:
             existing = session.get(Event, event_id)
             if existing:
                 if existing.user_id != request.user_id or existing.content_hash != _sha(
@@ -361,7 +370,7 @@ class MenoService:
             raise ValueError("batch event_id values must be unique")
 
         results: list[dict[str, Any]] = []
-        with self.session_factory.begin() as session:
+        with self._audit_chain_lock, self.session_factory.begin() as session:
             existing = {
                 event.id: event
                 for event in session.scalars(select(Event).where(Event.id.in_(resolved_ids))).all()
@@ -448,7 +457,7 @@ class MenoService:
 
     def _process_outbox_chunk(self, limit: int, only_row_ids: list[str] | None = None) -> int:
         now = _now()
-        with self.session_factory() as session:
+        with self._audit_chain_lock, self.session_factory() as session:
             # D2: only rows stamped with the running extractor version are
             # picked up, so processing code, row version and claim stamp agree.
             statement = select(Outbox).where(
@@ -1422,7 +1431,7 @@ class MenoService:
                     failed.next_attempt_at = now + timedelta(seconds=delay)
 
     def requeue_failed_outbox(self, limit: int | None = None) -> int:
-        with self.session_factory.begin() as session:
+        with self._audit_chain_lock, self.session_factory.begin() as session:
             statement = select(Outbox).where(Outbox.status == "failed").order_by(Outbox.created_at)
             if limit is not None:
                 statement = statement.limit(limit)
@@ -1435,7 +1444,7 @@ class MenoService:
             return len(rows)
 
     def requeue_failed_projection(self, limit: int | None = None) -> int:
-        with self.session_factory.begin() as session:
+        with self._audit_chain_lock, self.session_factory.begin() as session:
             statement = (
                 select(ProjectionOutbox)
                 .where(ProjectionOutbox.status == "failed")
@@ -1496,7 +1505,7 @@ class MenoService:
         """
         if not extractor_version:
             raise ValueError("extractor_version is required")
-        with self.session_factory.begin() as session:
+        with self._audit_chain_lock, self.session_factory.begin() as session:
             statement = select(Event.id).order_by(Event.created_at)
             if user_id is not None:
                 statement = statement.where(Event.user_id == user_id)
@@ -1566,7 +1575,7 @@ class MenoService:
     def migrate(self, batch_size: int = 500) -> dict[str, Any]:
         """Idempotent schema migration for the claim coordination protocol.
 
-        Steps (design doc section 4.1): add the three columns, backfill
+        Steps (design doc section 4.1): add the coordination columns, backfill
         semantic_key, dedupe existing active claims per (user, semantic_key),
         then create the partial unique index. Every step is re-runnable.
         """
@@ -1590,7 +1599,7 @@ class MenoService:
                 report["columns_added"].append(name)
             connection.execute(text("DROP INDEX IF EXISTS uq_claim_active_semantic"))
 
-        with self.session_factory.begin() as session:
+        with self._audit_chain_lock, self.session_factory.begin() as session:
             active_claims = session.scalars(
                 select(Claim).where(Claim.status == "active").with_for_update()
             ).all()
@@ -1620,7 +1629,7 @@ class MenoService:
                     report["routing_backfilled"] += 1
 
         while True:
-            with self.session_factory.begin() as session:
+            with self._audit_chain_lock, self.session_factory.begin() as session:
                 claims = session.scalars(
                     select(Claim).where(Claim.semantic_key == "").limit(batch_size)
                 ).all()
@@ -1657,7 +1666,7 @@ class MenoService:
         required = {"routing_slot", "routing_basis", "router_version"}
         if not required <= existing:
             return {"cleared": 0}
-        with self.session_factory.begin() as session:
+        with self._audit_chain_lock, self.session_factory.begin() as session:
             cleared = (
                 session.scalar(
                     select(func.count(Claim.id)).where(
@@ -1692,7 +1701,7 @@ class MenoService:
 
     def _dedupe_active_claims(self) -> int:
         deduplicated = 0
-        with self.session_factory.begin() as session:
+        with self._audit_chain_lock, self.session_factory.begin() as session:
             duplicates = session.execute(
                 select(Claim.user_id, Claim.semantic_key)
                 .where(Claim.status == "active", Claim.semantic_key != "")
@@ -1745,7 +1754,7 @@ class MenoService:
             hits = []
             degraded = True
 
-        with self.session_factory.begin() as session:
+        with self._audit_chain_lock, self.session_factory.begin() as session:
             revision = self._revision(session, request.user_id)
             if not hits:
                 claims = session.scalars(
@@ -1957,7 +1966,7 @@ class MenoService:
         fingerprint = _sha(request.model_dump_json())
         new_claim_id: str | None = None
         old_claim_id = request.claim_id
-        with self.session_factory.begin() as session:
+        with self._audit_chain_lock, self.session_factory.begin() as session:
             replay = self._idempotent_replay(
                 session, endpoint="feedback", key=idempotency_key, fingerprint=fingerprint
             )
@@ -2127,7 +2136,7 @@ class MenoService:
     ) -> dict[str, Any]:
         trace_id = _id()
         fingerprint = _sha(request.model_dump_json())
-        with self.session_factory.begin() as session:
+        with self._audit_chain_lock, self.session_factory.begin() as session:
             replay = self._idempotent_replay(
                 session, endpoint="consent", key=idempotency_key, fingerprint=fingerprint
             )
@@ -2184,7 +2193,7 @@ class MenoService:
         subject_hash = _sha(request.user_id)
         trace_id = _id()
         fingerprint = _sha(request.model_dump_json())
-        with self.session_factory.begin() as session:
+        with self._audit_chain_lock, self.session_factory.begin() as session:
             replay = self._idempotent_replay(
                 session, endpoint="deletion", key=idempotency_key, fingerprint=fingerprint
             )
@@ -3523,7 +3532,7 @@ class MenoService:
                 return 0
             self._audit_buffer.clear()
             try:
-                with self.session_factory.begin() as session:
+                with self._audit_chain_lock, self.session_factory.begin() as session:
                     for entry in batch:
                         self._audit(session, **entry)
             except Exception:  # buffered audits must survive transient DB failures
@@ -3553,41 +3562,47 @@ class MenoService:
                 text("SELECT pg_advisory_xact_lock(:lock_id)"),
                 {"lock_id": 1_296_386_663},
             )
-        previous = session.scalar(
-            select(AuditEvent).order_by(AuditEvent.created_at.desc(), AuditEvent.id.desc()).limit(1)
-        )
-        prev_hash = previous.current_hash if previous else None
-        created_at = _now()
-        if previous is not None and created_at <= _aware(previous.created_at):
-            created_at = _aware(previous.created_at) + timedelta(microseconds=1)
-        payload = {
-            "event_name": event_name,
-            "trace_id": trace_id,
-            "user_hash": _sha(user_id),
-            "claim_id": claim_id,
-            "action": action,
-            "purpose": purpose,
-            "decision": decision,
-            "state_revision": revision,
-            "source_event_ids": event_ids,
-            "prev_hash": prev_hash,
-        }
-        current_hash = _sha(json.dumps(payload, ensure_ascii=False, sort_keys=True))
-        session.add(
-            AuditEvent(
-                id=_id(),
-                event_name=event_name,
-                trace_id=trace_id,
-                user_hash=payload["user_hash"],
-                claim_id=claim_id,
-                action=action,
-                purpose=purpose,
-                decision=decision,
-                state_revision=revision,
-                source_event_ids=event_ids,
-                prev_hash=prev_hash,
-                current_hash=current_hash,
-                created_at=created_at,
+        # Guard for callers that did not enter through an audit-writing
+        # transaction wrapper (see __init__): the head read and the insert must
+        # not interleave with another thread's.
+        with self._audit_chain_lock:
+            previous = session.scalar(
+                select(AuditEvent)
+                .order_by(AuditEvent.created_at.desc(), AuditEvent.id.desc())
+                .limit(1)
             )
-        )
-        session.flush()
+            prev_hash = previous.current_hash if previous else None
+            created_at = _now()
+            if previous is not None and created_at <= _aware(previous.created_at):
+                created_at = _aware(previous.created_at) + timedelta(microseconds=1)
+            payload = {
+                "event_name": event_name,
+                "trace_id": trace_id,
+                "user_hash": _sha(user_id),
+                "claim_id": claim_id,
+                "action": action,
+                "purpose": purpose,
+                "decision": decision,
+                "state_revision": revision,
+                "source_event_ids": event_ids,
+                "prev_hash": prev_hash,
+            }
+            current_hash = _sha(json.dumps(payload, ensure_ascii=False, sort_keys=True))
+            session.add(
+                AuditEvent(
+                    id=_id(),
+                    event_name=event_name,
+                    trace_id=trace_id,
+                    user_hash=payload["user_hash"],
+                    claim_id=claim_id,
+                    action=action,
+                    purpose=purpose,
+                    decision=decision,
+                    state_revision=revision,
+                    source_event_ids=event_ids,
+                    prev_hash=prev_hash,
+                    current_hash=current_hash,
+                    created_at=created_at,
+                )
+            )
+            session.flush()

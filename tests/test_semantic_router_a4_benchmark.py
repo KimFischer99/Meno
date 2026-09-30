@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 
+import pytest
+
 from benchmarks.run_semantic_router_a3_development import load_prototypes
 from benchmarks.run_semantic_router_a4_development import (
     DEFAULT_A31_ARTIFACT,
@@ -20,6 +22,13 @@ from benchmarks.run_semantic_router_a4_development import (
     select_a4_variant,
 )
 from meno.semantic_router import A4_STRATEGY_VERSION, DimensionScore
+
+# Every archive-backed test below replays the a31 provider-holdout run, whose
+# result file under artifacts/ is local-only (see benchmarks/README.md).
+requires_a31_artifact = pytest.mark.skipif(
+    not DEFAULT_A31_ARTIFACT.is_file(),
+    reason="Historical a31 holdout artifact is local-only; archive-backed tests skip offline",
+)
 
 
 def _oracle_scores(cases):  # type: ignore[no-untyped-def]
@@ -40,6 +49,7 @@ def _oracle_scores(cases):  # type: ignore[no-untyped-def]
     return scores
 
 
+@requires_a31_artifact
 def test_a4_development_is_exactly_the_two_revealed_sources() -> None:
     _, cases, sources = load_a4_development(
         DEFAULT_V2_FIXTURE,
@@ -79,6 +89,7 @@ def test_a4_raw_artifact_guard_avoids_short_substring_false_positives() -> None:
     )
 
 
+@requires_a31_artifact
 def test_a4_gate_requires_each_source_and_answer_style_to_pass() -> None:
     _, cases, sources = load_a4_development(
         DEFAULT_V2_FIXTURE,
@@ -106,6 +117,7 @@ def test_a4_gate_requires_each_source_and_answer_style_to_pass() -> None:
     assert provider_coverage(cases, _oracle_scores(cases))["passed"] is True
 
 
+@requires_a31_artifact
 def test_a4_high_confidence_collision_has_no_recommendation() -> None:
     _, cases, sources = load_a4_development(
         DEFAULT_V2_FIXTURE,
@@ -138,6 +150,7 @@ def test_a4_high_confidence_collision_has_no_recommendation() -> None:
     assert recommendation is None
 
 
+@requires_a31_artifact
 def test_a4_router_and_tie_break_use_role_aware_version() -> None:
     _, cases, _ = load_a4_development(
         DEFAULT_V2_FIXTURE,

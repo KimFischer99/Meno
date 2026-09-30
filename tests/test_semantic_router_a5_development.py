@@ -9,19 +9,28 @@ import pytest
 import benchmarks.run_semantic_router_a5_development as a5_runner
 from benchmarks.run_semantic_router_a3_development import load_prototypes
 from benchmarks.run_semantic_router_a5_development import (
-    DEFAULT_PROTOTYPES as DEFAULT_A5_PROTOTYPES,
-)
-from benchmarks.run_semantic_router_a5_development import (
+    DEFAULT_A31_ARTIFACT,
     EXPECTED_PROTOTYPE_SHA256,
     evaluate_point,
     load_a5_development,
     load_prototypes_a5,
+)
+from benchmarks.run_semantic_router_a5_development import (
+    DEFAULT_PROTOTYPES as DEFAULT_A5_PROTOTYPES,
 )
 from meno.semantic_router import ENSEMBLE_STRATEGY_VERSION, DimensionScore, PolicyRouter
 from tests.fakes import TestEmbedder
 
 ROOT = Path(__file__).parent.parent
 A4_PROTOTYPES = ROOT / "benchmarks" / "fixtures" / "semantic-prototypes-a3-v1.json"
+
+# The archive-backed tests below replay the a31 provider-holdout run via
+# load_a5_development(), whose result file under artifacts/ is local-only
+# (see benchmarks/README.md).
+requires_a31_artifact = pytest.mark.skipif(
+    not DEFAULT_A31_ARTIFACT.is_file(),
+    reason="Historical a31 holdout artifact is local-only; archive-backed tests skip offline",
+)
 
 
 def test_a5_prototypes_fixture_is_frozen_and_structurally_valid() -> None:
@@ -75,6 +84,7 @@ def test_a5_prototypes_reject_tampered_fixtures(tmp_path: Path) -> None:
     )
 
 
+@requires_a31_artifact
 def test_a5_development_loads_the_pinned_111_cases() -> None:
     raw, cases, sources = load_a5_development()
 
@@ -84,6 +94,7 @@ def test_a5_development_loads_the_pinned_111_cases() -> None:
     assert set(raw) == {"v2_fixture", "a31_fixture", "a31_artifact", "a31_manifest"}
 
 
+@requires_a31_artifact
 def test_a5_evaluate_point_enforces_all_frozen_conditions() -> None:
     _, cases, sources = load_a5_development()
     router = PolicyRouter(strategy_version=ENSEMBLE_STRATEGY_VERSION)
@@ -152,6 +163,7 @@ def _oracle_score(case):  # type: ignore[no-untyped-def]
     )
 
 
+@requires_a31_artifact
 def test_a5_main_writes_artifact_with_deterministic_embedder(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
