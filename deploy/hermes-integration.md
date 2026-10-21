@@ -5,6 +5,26 @@ Hermes profile's `meno-data/`, adds a profile-local `meno` provider, and sets
 `memory.provider: meno` in that profile's `config.yaml`. It does not edit Hermes
 source or restart Hermes.
 
+Targets Hermes 0.22.0/0.22.1. For an existing system service using `/etc/meno.env`
+and `/var/lib/meno/meno.db`, use the [manual upgrade](README.md#backups-and-upgrades).
+Do not run the profile installer to upgrade that deployment: its profile-local
+database is a separate store.
+
+## Hermes 0.22 contract
+
+The upstream [provider loader](https://github.com/NousResearch/hermes-agent/blob/v0.22.0/plugins/memory/__init__.py)
+supports bundled, profile-local, project-local, and pip entry-point providers,
+in that order. Meno keeps its `hermes_agent.memory_providers` entry point;
+the installer also writes `$HERMES_HOME/plugins/meno/__init__.py` for a Hermes
+interpreter that does not have the Meno package installed.
+
+Provider settings (`MENO_API_URL`, `MENO_API_TOKEN`, `MENO_USER_ID`, and timeout)
+use Hermes' [profile secret scope](https://github.com/NousResearch/hermes-agent/blob/v0.22.0/agent/secret_scope.py).
+Under multiplexing, a missing token never inherits another profile's process
+token, and an unbound scope remains an error. The spool thread copies the
+initializing context so profile and secret scope survive the thread boundary.
+Standalone Meno still reads its process environment when Hermes is absent.
+
 ## Install
 
 Run from a Linux host with Python, systemd, and the Meno checkout available:
@@ -48,8 +68,10 @@ source tree used by the Hermes process:
 discoverable from the Python executable's parent paths. The check sets
 `HERMES_HOME` to the selected profile, verifies `memory.provider`, asks Hermes'
 real `load_memory_provider('meno', register_skills=False)` loader to load the
-provider, then checks `/health/ready` and an authenticated `/v1/retrieve`. It
-does not print retrieved memory text.
+provider inside that profile's secret scope, then checks `/health/ready` and an
+authenticated `/v1/retrieve`. The check restores the caller's secret scope on
+success or failure and does not copy profile credentials into `os.environ`.
+It does not print retrieved memory text.
 
 For foreground startup, use the sidecar interpreter and environment created by
 the installer:

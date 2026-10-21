@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Header, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
 
+from . import __version__
 from .config import Settings
 from .db import make_session_factory
 from .schemas import (
@@ -113,7 +114,7 @@ def create_app(
 
     app = FastAPI(
         title="Meno Personal Agent Memory",
-        version="3.0.0",
+        version=__version__,
         lifespan=lifespan,
     )
 

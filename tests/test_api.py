@@ -9,6 +9,7 @@ from sqlalchemy import select
 
 import meno.service as service_module
 from benchmarks.verify_invariants import audit_chain_summary
+from meno import __version__
 from meno.api import create_app
 from meno.config import Settings
 from meno.db import AuditEvent
@@ -29,6 +30,7 @@ def retrieve(client, user_id: str, query: str, **constraints):
 
 
 def test_ingest_retrieve_and_audit(client, ingest):
+    assert client.get("/openapi.json").json()["info"]["version"] == __version__ == "3.1.0"
     ingest("以后默认先给结论，再给细节。")
     response = retrieve(client, "user-a", "我希望回答采用什么结构？")
     assert response.status_code == 200

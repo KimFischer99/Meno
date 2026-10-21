@@ -215,36 +215,37 @@ def check(home: Path, hermes_dir: str | None = None) -> None:
     selected = (config.get("memory") or {}).get("provider")
     if selected != "meno":
         raise RuntimeError(f"Hermes selected memory.provider={selected!r}, expected 'meno'")
-    for key, value in _parse_env(home / ".env").items():
-        if key.startswith("MENO_"):
-            os.environ[key] = value
-
     _hermes_source(home, hermes_dir)
-    loader = importlib.import_module("plugins.memory").load_memory_provider
-    provider = loader("meno", register_skills=False)
-    if not provider or not provider.is_available():
-        raise RuntimeError("Hermes loaded Meno, but the provider is unavailable")
+    secret_scope = importlib.import_module("agent.secret_scope")
+    scope_token = secret_scope.set_secret_scope(secret_scope.build_profile_secret_scope(home))
+    try:
+        loader = importlib.import_module("plugins.memory").load_memory_provider
+        provider = loader("meno", register_skills=False)
+        if not provider or not provider.is_available():
+            raise RuntimeError("Hermes loaded Meno, but the provider is unavailable")
 
-    base = os.environ.get("MENO_API_URL", PROFILE_KEYS["MENO_API_URL"]).rstrip("/")
-    token = os.environ.get("MENO_API_TOKEN", "")
-    user_id = os.environ.get("MENO_USER_ID", "")
-    with httpx.Client(timeout=30.0, trust_env=False) as client:
-        client.get(f"{base}/health/ready").raise_for_status()
-        response = client.post(
-            f"{base}/v1/retrieve",
-            headers={"Authorization": f"Bearer {token}"},
-            json={
-                "user_id": user_id,
-                "purpose": "response_personalization",
-                "context": {"query": "Meno connection check", "platform": "hermes-check"},
-                "constraints": {"max_facets": 1, "max_rendered_tokens": 64},
-            },
-        )
-        response.raise_for_status()
-        if response.json().get("degraded"):
-            raise RuntimeError(
-                "Meno retrieval is degraded; check embedding credentials and service logs"
+        base = secret_scope.get_secret("MENO_API_URL", PROFILE_KEYS["MENO_API_URL"]).rstrip("/")
+        token = secret_scope.get_secret("MENO_API_TOKEN", "")
+        user_id = secret_scope.get_secret("MENO_USER_ID", "")
+        with httpx.Client(timeout=30.0, trust_env=False) as client:
+            client.get(f"{base}/health/ready").raise_for_status()
+            response = client.post(
+                f"{base}/v1/retrieve",
+                headers={"Authorization": f"Bearer {token}"},
+                json={
+                    "user_id": user_id,
+                    "purpose": "response_personalization",
+                    "context": {"query": "Meno connection check", "platform": "hermes-check"},
+                    "constraints": {"max_facets": 1, "max_rendered_tokens": 64},
+                },
             )
+            response.raise_for_status()
+            if response.json().get("degraded"):
+                raise RuntimeError(
+                    "Meno retrieval is degraded; check embedding credentials and service logs"
+                )
+    finally:
+        secret_scope.reset_secret_scope(scope_token)
     print("Hermes loaded Meno; local health and authenticated retrieve passed.")
 
 

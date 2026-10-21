@@ -8,12 +8,20 @@ import threading
 import time
 import uuid
 from contextlib import closing
+from contextvars import copy_context
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 import httpx
+
+try:  # Hermes scopes credentials and provider settings per active profile.
+    from agent.secret_scope import get_secret
+except ModuleNotFoundError as exc:  # Standalone Meno has no Hermes profile scope.
+    if exc.name != "agent":
+        raise
+    get_secret = os.environ.get
 
 try:  # Available inside Hermes Agent.
     from agent.memory_provider import MemoryProvider, RecallStatus
@@ -104,9 +112,9 @@ class DurableSpool:
 
 class MenoMemoryProvider(MemoryProvider):
     def __init__(self) -> None:
-        self._base_url = os.environ.get("MENO_API_URL", "http://127.0.0.1:8765").rstrip("/")
-        self._token = os.environ.get("MENO_API_TOKEN", "")
-        self._timeout = float(os.environ.get("MENO_PROVIDER_TIMEOUT_SECONDS", "0.8"))
+        self._base_url = get_secret("MENO_API_URL", "http://127.0.0.1:8765").rstrip("/")
+        self._token = get_secret("MENO_API_TOKEN", "")
+        self._timeout = float(get_secret("MENO_PROVIDER_TIMEOUT_SECONDS", "0.8"))
         self._user_id = ""
         self._profile = ""
         self._session_id = ""
@@ -134,7 +142,7 @@ class MenoMemoryProvider(MemoryProvider):
         hermes_home = Path(kwargs["hermes_home"]).expanduser().resolve()
         self._profile = str(kwargs.get("agent_identity") or hermes_home.name)
         runtime_user = str(kwargs.get("user_id") or kwargs.get("user_id_alt") or "")
-        self._user_id = os.environ.get("MENO_USER_ID") or runtime_user or self._profile
+        self._user_id = get_secret("MENO_USER_ID") or runtime_user or self._profile
         self._agent_context = str(kwargs.get("agent_context") or "primary")
         self._session_id = session_id
         self._spool = DurableSpool(hermes_home / "meno" / "provider-spool.sqlite3")
@@ -145,7 +153,8 @@ class MenoMemoryProvider(MemoryProvider):
             trust_env=False,
         )
         self._worker = threading.Thread(
-            target=self._drain_loop,
+            target=copy_context().run,
+            args=(self._drain_loop,),
             name="meno-provider-spool",
             daemon=True,
         )

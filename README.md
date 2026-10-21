@@ -1,16 +1,15 @@
-# Meno v3.0
+# Meno v3.1
 
 Persistent, evidence-backed memory for **Hermes Agent**. Meno runs as a local
 sidecar: SQLite stores canonical state, an in-process vector index serves recall,
 and a durable Hermes spool retries turns when the sidecar is unavailable.
 
-v3 brings the deployed runtime fixes back into the open-source repository.
-It keeps the existing API and embedding stack rather than introducing another
-memory architecture.
+v3.1 supports Hermes 0.22.0/0.22.1 profile-scoped credentials and background
+worker context. It keeps the v3 API, canonical storage, and embedding stack.
 
 ## Install with Hermes
 
-Requires Python 3.11+, an installed Hermes Agent, and a SiliconFlow API key for
+Requires Python 3.11+, Hermes Agent 0.22.0/0.22.1, and a SiliconFlow API key for
 `BAAI/bge-m3` embeddings. Linux with systemd is the primary deployment target.
 The embedding API is an external service and may incur charges.
 
@@ -29,12 +28,16 @@ Restart Hermes after installation so it loads the new provider.
 See [Hermes installation and diagnostics](deploy/hermes-integration.md) for
 custom profiles, runtime paths, existing installations, and foreground startup.
 Only one external memory provider can be selected in Hermes at a time.
+For an existing system service, follow the [manual upgrade](deploy/README.md#backups-and-upgrades)
+to retain its database, environment, and systemd resource limits.
 
 This is a **single-user sidecar**. Use a separate profile and Meno service/token
 for each user; the shared bearer token is not a multi-tenant authorization system.
 
 ## What changed in v3
 
+- v3.1: provider settings use Hermes' active secret scope; spool workers inherit
+  profile context, and diagnostics bind and restore the selected profile's secrets.
 - Compact, lossless user-token snapshot deltas with periodic full snapshots.
 - Stored idempotent results for feedback, consent, and deletion requests.
 - Deletion watermarks prevent old queued events from restoring forgotten data.

@@ -1,3 +1,3 @@
-"""Meno v3.0 personal agent memory sidecar."""
+"""Meno v3.1 personal agent memory sidecar."""
 
-__version__ = "3.0.0"
+__version__ = "3.1.0"

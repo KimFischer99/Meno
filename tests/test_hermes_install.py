@@ -7,6 +7,7 @@ import os
 import tempfile
 import types
 import unittest
+from contextvars import ContextVar
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -15,6 +16,17 @@ SPEC = importlib.util.spec_from_file_location("install_hermes", SCRIPT)
 installer = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
 SPEC.loader.exec_module(installer)
+
+
+def profile_secret_scope(values):
+    scope = ContextVar("test_profile_scope", default={"MENO_API_TOKEN": "caller-token"})
+    return types.SimpleNamespace(
+        build_profile_secret_scope=lambda home: values,
+        set_secret_scope=scope.set,
+        reset_secret_scope=scope.reset,
+        get_secret=lambda name, default=None: scope.get().get(name, default),
+        current_secret_scope=scope.get,
+    )
 
 
 class HermesInstallerTests(unittest.TestCase):
@@ -88,23 +100,47 @@ class HermesInstallerTests(unittest.TestCase):
             client.get.return_value = response
             client.post.return_value = response
             module = types.SimpleNamespace(load_memory_provider=lambda name, **kwargs: provider)
+            secrets = profile_secret_scope(installer._parse_env(home / ".env"))
             out = io.StringIO()
             with (
                 patch.dict(os.environ, {}, clear=False),
-                patch.object(installer.importlib, "import_module", return_value=module),
+                patch.object(
+                    installer.importlib, "import_module",
+                    side_effect=lambda name: secrets if name == "agent.secret_scope" else module,
+                ),
                 patch.object(installer.httpx, "Client", return_value=client),
                 contextlib.redirect_stdout(out),
             ):
-                os.environ.pop("MENO_API_TOKEN", None)
+                os.environ["MENO_API_TOKEN"] = "other-profile-token"
                 os.environ.pop("MENO_USER_ID", None)
                 installer.check(home, str(source))
                 self.assertEqual(os.environ["HERMES_HOME"], str(home.resolve()))
+                self.assertEqual(os.environ["MENO_API_TOKEN"], "other-profile-token")
+                self.assertEqual(secrets.current_secret_scope(), {"MENO_API_TOKEN": "caller-token"})
 
             args, kwargs = client.post.call_args
             self.assertEqual(args[0], "http://127.0.0.1:8765/v1/retrieve")
             self.assertEqual(kwargs["headers"]["Authorization"], "Bearer secret-token-value")
             self.assertEqual(kwargs["json"]["user_id"], "stable-profile")
             self.assertNotIn("rendered_context", out.getvalue())
+
+    def test_failed_check_restores_caller_secret_scope(self):
+        with tempfile.TemporaryDirectory() as directory:
+            home = Path(directory)
+            (home / "config.yaml").write_text("memory:\n  provider: meno\n", encoding="utf-8")
+            secrets = profile_secret_scope({"MENO_API_TOKEN": "profile-token"})
+            module = types.SimpleNamespace(load_memory_provider=lambda name, **kwargs: None)
+            with (
+                patch.dict(os.environ, {"MENO_API_TOKEN": "other-profile-token"}),
+                patch.object(installer, "_hermes_source"),
+                patch.object(
+                    installer.importlib, "import_module",
+                    side_effect=lambda name: secrets if name == "agent.secret_scope" else module,
+                ),
+                self.assertRaisesRegex(RuntimeError, "provider is unavailable"),
+            ):
+                installer.check(home)
+            self.assertEqual(secrets.current_secret_scope(), {"MENO_API_TOKEN": "caller-token"})
 
     def test_start_waits_and_checks_after_systemd_start(self):
         with tempfile.TemporaryDirectory() as directory:
