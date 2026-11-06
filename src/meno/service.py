@@ -370,6 +370,7 @@ class MenoService:
             raise ValueError("batch event_id values must be unique")
 
         results: list[dict[str, Any]] = []
+        watermarks: dict[str, datetime | None] = {}
         with self._audit_chain_lock, self.session_factory.begin() as session:
             existing = {
                 event.id: event
@@ -393,6 +394,23 @@ class MenoService:
                 provided_hash = request.metadata.get("content_hash")
                 if provided_hash and provided_hash != content_hash:
                     raise ValueError("content_hash mismatch")
+                if request.user_id not in watermarks:
+                    watermarks[request.user_id] = self._deletion_watermark(session, request.user_id)
+                watermark = watermarks[request.user_id]
+                if watermark is not None and _aware(request.occurred_at) <= watermark:
+                    # Same rule as single ingest: a replayed batch must not resurrect
+                    # events the user already asked to be forgotten.
+                    results.append(
+                        {
+                            "event_id": event_id,
+                            "state_revision": self._revision(session, request.user_id),
+                            "idempotent_replay": False,
+                            "accepted": False,
+                            "skipped": True,
+                            "reason": "before_deletion_watermark",
+                        }
+                    )
+                    continue
                 session.add(
                     Event(
                         id=event_id,
@@ -438,7 +456,7 @@ class MenoService:
                     }
                 )
         return {
-            "accepted": len(results),
+            "accepted": sum(1 for result in results if not result.get("skipped")),
             "policy_version": self.settings.policy_version,
             "events": results,
         }
