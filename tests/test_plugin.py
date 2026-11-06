@@ -133,6 +133,26 @@ def test_spool_dead_letter_moves_row_and_truncates_reason(tmp_path):
     assert len(reason) == plugin.DEAD_LETTER_REASON_CHARS
 
 
+def test_spool_purges_dead_letters_past_retention(tmp_path):
+    spool = DurableSpool(tmp_path / "spool.sqlite3", dead_letter_retention_seconds=100)
+    for event_id in ("old", "fresh"):
+        spool.enqueue({"event_id": event_id, "text": "x"})
+        spool.dead_letter(event_id, 422, "too large")
+    with closing(spool._connect()) as connection:
+        connection.execute("UPDATE dead_letter SET failed_at = ? WHERE id = 'old'", (1000.0,))
+        connection.execute("UPDATE dead_letter SET failed_at = ? WHERE id = 'fresh'", (1080.0,))
+        connection.commit()
+
+    assert spool.purge_dead_letters(now=1150.0) == 1
+    with closing(spool._connect()) as connection:
+        remaining = [row[0] for row in connection.execute("SELECT id FROM dead_letter")]
+    assert remaining == ["fresh"]
+
+    # Reopening the spool applies the retention window immediately.
+    reopened = DurableSpool(tmp_path / "spool.sqlite3", dead_letter_retention_seconds=0)
+    assert reopened.dead_letter_count() == 0
+
+
 @pytest.mark.parametrize("status", [400, 413, 422])
 def test_rejected_event_is_dead_lettered_and_does_not_block_queue(tmp_path, monkeypatch, status):
     delivered = []
