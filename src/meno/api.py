@@ -26,6 +26,8 @@ from .semantic_policy import FrozenSemanticRoutingPolicy
 from .service import MenoService
 from .vector import Embedder, VectorStore, make_embedder, make_vector_store
 
+log = logging.getLogger(__name__)
+
 
 def build_service(
     settings: Settings,
@@ -78,8 +80,13 @@ def create_app(
 
         async def worker() -> None:
             while not stop.is_set():
-                await asyncio.to_thread(service.process_outbox)
-                await asyncio.to_thread(service.flush_audit_buffer)
+                # One failed round (e.g. a dropped DB connection) must not end the
+                # worker for good; log it and retry after the normal poll interval.
+                try:
+                    await asyncio.to_thread(service.process_outbox)
+                    await asyncio.to_thread(service.flush_audit_buffer)
+                except Exception:
+                    log.exception("meno outbox worker round failed")
                 try:
                     await asyncio.wait_for(stop.wait(), timeout=resolved.worker_poll_seconds)
                 except TimeoutError:
@@ -103,14 +110,22 @@ def create_app(
         )
 
         task = asyncio.create_task(worker(), name="meno-outbox-worker")
-        yield
-        stop.set()
-        with contextlib.suppress(asyncio.CancelledError):
-            await task
-        if warmup is not None:
-            await warmup
-        service.flush_audit_buffer()
-        service.close()
+        try:
+            yield
+        finally:
+            stop.set()
+            try:
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
+            finally:
+                try:
+                    if warmup is not None:
+                        await warmup
+                finally:
+                    try:
+                        service.flush_audit_buffer()
+                    finally:
+                        service.close()
 
     app = FastAPI(
         title="Meno Personal Agent Memory",
