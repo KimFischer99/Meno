@@ -38,6 +38,12 @@ except ImportError:  # Allows standalone Meno packaging and tests.
 
 log = logging.getLogger(__name__)
 
+DEAD_LETTER_REASON_CHARS = 500
+# Client errors that may succeed on a later attempt; every other 4xx is permanent.
+# 401/403 mean the sidecar credentials are wrong or expired, which affects every
+# event alike, so they must not drain the whole queue into the dead letter table.
+RETRYABLE_CLIENT_STATUSES = frozenset({401, 403, 408, 429})
+
 
 AUDIT_SCHEMA = {
     "name": "meno_audit",
@@ -73,6 +79,11 @@ class DurableSpool:
                 "CREATE TABLE IF NOT EXISTS pending ("
                 "id TEXT PRIMARY KEY, payload TEXT NOT NULL, created_at REAL NOT NULL)"
             )
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS dead_letter ("
+                "id TEXT PRIMARY KEY, payload TEXT NOT NULL, created_at REAL NOT NULL, "
+                "failed_at REAL NOT NULL, status_code INTEGER NOT NULL, reason TEXT NOT NULL)"
+            )
             connection.commit()
         self.path.chmod(0o600)
 
@@ -105,9 +116,25 @@ class DurableSpool:
             connection.execute("DELETE FROM pending WHERE id = ?", (event_id,))
             connection.commit()
 
+    def dead_letter(self, event_id: str, status_code: int, reason: str) -> None:
+        """Move a permanently rejected event out of the queue, keeping it for inspection."""
+        with closing(self._connect()) as connection:
+            connection.execute(
+                "INSERT OR REPLACE INTO dead_letter"
+                "(id, payload, created_at, failed_at, status_code, reason) "
+                "SELECT id, payload, created_at, ?, ?, ? FROM pending WHERE id = ?",
+                (time.time(), status_code, reason[:DEAD_LETTER_REASON_CHARS], event_id),
+            )
+            connection.execute("DELETE FROM pending WHERE id = ?", (event_id,))
+            connection.commit()
+
     def count(self) -> int:
         with closing(self._connect()) as connection:
             return int(connection.execute("SELECT COUNT(*) FROM pending").fetchone()[0])
+
+    def dead_letter_count(self) -> int:
+        with closing(self._connect()) as connection:
+            return int(connection.execute("SELECT COUNT(*) FROM dead_letter").fetchone()[0])
 
 
 class MenoMemoryProvider(MemoryProvider):
@@ -368,6 +395,20 @@ class MenoMemoryProvider(MemoryProvider):
                 response.raise_for_status()
                 if self._spool is not None:
                     self._spool.complete(event_id)
+            except httpx.HTTPStatusError as exc:
+                status = exc.response.status_code
+                if 400 <= status < 500 and status not in RETRYABLE_CLIENT_STATUSES:
+                    # Retrying a permanently rejected event would block the whole queue.
+                    log.warning(
+                        "Meno ingest rejected event %s with HTTP %d; moved to dead letter",
+                        event_id,
+                        status,
+                    )
+                    if self._spool is not None:
+                        self._spool.dead_letter(event_id, status, exc.response.text)
+                    continue
+                log.warning("Meno ingest deferred; event remains in durable spool", exc_info=True)
+                self._stop.wait(0.5)
             except Exception:
                 log.warning("Meno ingest deferred; event remains in durable spool", exc_info=True)
                 self._stop.wait(0.5)
