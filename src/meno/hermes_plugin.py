@@ -38,6 +38,16 @@ except ImportError:  # Allows standalone Meno packaging and tests.
 
 log = logging.getLogger(__name__)
 
+DEAD_LETTER_REASON_CHARS = 500
+# Client errors that may succeed on a later attempt; every other 4xx is permanent.
+# 401/403 mean the sidecar credentials are wrong or expired, which affects every
+# event alike, so they must not drain the whole queue into the dead letter table.
+RETRYABLE_CLIENT_STATUSES = frozenset({401, 403, 408, 429})
+# Dead-lettered rows hold raw conversation text, so they are kept only long enough
+# to inspect, then purged. The drain loop checks at most this often.
+DEAD_LETTER_RETENTION_SECONDS = 30 * 24 * 3600
+DEAD_LETTER_PURGE_INTERVAL_SECONDS = 3600
+
 
 AUDIT_SCHEMA = {
     "name": "meno_audit",
@@ -64,17 +74,29 @@ RECALL_SCHEMA = {
 
 
 class DurableSpool:
-    def __init__(self, path: Path, max_pending: int = 5000) -> None:
+    def __init__(
+        self,
+        path: Path,
+        max_pending: int = 5000,
+        dead_letter_retention_seconds: float = DEAD_LETTER_RETENTION_SECONDS,
+    ) -> None:
         self.path = path
         self.max_pending = max_pending
+        self.dead_letter_retention_seconds = dead_letter_retention_seconds
         self.path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         with closing(self._connect()) as connection:
             connection.execute(
                 "CREATE TABLE IF NOT EXISTS pending ("
                 "id TEXT PRIMARY KEY, payload TEXT NOT NULL, created_at REAL NOT NULL)"
             )
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS dead_letter ("
+                "id TEXT PRIMARY KEY, payload TEXT NOT NULL, created_at REAL NOT NULL, "
+                "failed_at REAL NOT NULL, status_code INTEGER NOT NULL, reason TEXT NOT NULL)"
+            )
             connection.commit()
         self.path.chmod(0o600)
+        self.purge_dead_letters()
 
     def _connect(self) -> sqlite3.Connection:
         return sqlite3.connect(self.path, timeout=5)
@@ -105,9 +127,35 @@ class DurableSpool:
             connection.execute("DELETE FROM pending WHERE id = ?", (event_id,))
             connection.commit()
 
+    def dead_letter(self, event_id: str, status_code: int, reason: str) -> None:
+        """Move a permanently rejected event out of the queue, keeping it for inspection."""
+        with closing(self._connect()) as connection:
+            connection.execute(
+                "INSERT OR REPLACE INTO dead_letter"
+                "(id, payload, created_at, failed_at, status_code, reason) "
+                "SELECT id, payload, created_at, ?, ?, ? FROM pending WHERE id = ?",
+                (time.time(), status_code, reason[:DEAD_LETTER_REASON_CHARS], event_id),
+            )
+            connection.execute("DELETE FROM pending WHERE id = ?", (event_id,))
+            connection.commit()
+
     def count(self) -> int:
         with closing(self._connect()) as connection:
             return int(connection.execute("SELECT COUNT(*) FROM pending").fetchone()[0])
+
+    def dead_letter_count(self) -> int:
+        with closing(self._connect()) as connection:
+            return int(connection.execute("SELECT COUNT(*) FROM dead_letter").fetchone()[0])
+
+    def purge_dead_letters(self, now: float | None = None) -> int:
+        """Delete dead-lettered rows older than the retention window; return how many."""
+        cutoff = (time.time() if now is None else now) - self.dead_letter_retention_seconds
+        with closing(self._connect()) as connection:
+            deleted = connection.execute(
+                "DELETE FROM dead_letter WHERE failed_at < ?", (cutoff,)
+            ).rowcount
+            connection.commit()
+        return int(deleted)
 
 
 class MenoMemoryProvider(MemoryProvider):
@@ -350,7 +398,19 @@ class MenoMemoryProvider(MemoryProvider):
             self._client.close()
 
     def _drain_loop(self) -> None:
+        last_purge = time.monotonic()
         while not self._stop.is_set():
+            if (
+                self._spool is not None
+                and time.monotonic() - last_purge >= DEAD_LETTER_PURGE_INTERVAL_SECONDS
+            ):
+                last_purge = time.monotonic()
+                try:
+                    purged = self._spool.purge_dead_letters()
+                    if purged:
+                        log.info("Meno purged %d expired dead-letter events", purged)
+                except Exception:
+                    log.warning("Meno dead-letter purge failed", exc_info=True)
             item = self._spool.peek() if self._spool is not None else None
             if item is None:
                 self._wake.wait(timeout=0.5)
@@ -368,6 +428,20 @@ class MenoMemoryProvider(MemoryProvider):
                 response.raise_for_status()
                 if self._spool is not None:
                     self._spool.complete(event_id)
+            except httpx.HTTPStatusError as exc:
+                status = exc.response.status_code
+                if 400 <= status < 500 and status not in RETRYABLE_CLIENT_STATUSES:
+                    # Retrying a permanently rejected event would block the whole queue.
+                    log.warning(
+                        "Meno ingest rejected event %s with HTTP %d; moved to dead letter",
+                        event_id,
+                        status,
+                    )
+                    if self._spool is not None:
+                        self._spool.dead_letter(event_id, status, exc.response.text)
+                    continue
+                log.warning("Meno ingest deferred; event remains in durable spool", exc_info=True)
+                self._stop.wait(0.5)
             except Exception:
                 log.warning("Meno ingest deferred; event remains in durable spool", exc_info=True)
                 self._stop.wait(0.5)

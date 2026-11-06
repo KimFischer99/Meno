@@ -108,6 +108,46 @@ def test_consent_revocation_blocks_source(client, ingest):
     assert retrieve(client, "user-a", "data science language").json()["facets"] == []
 
 
+def _set_consent(client, key: str, status: str, **extra):
+    response = client.post(
+        "/v1/consents",
+        headers={"Idempotency-Key": key},
+        json={
+            "user_id": "user-a",
+            "source": "obsidian",
+            "purpose": "response_personalization",
+            "allowed_operations": ["ingest"],
+            "status": status,
+            **extra,
+        },
+    )
+    assert response.status_code == 200, response.text
+
+
+def test_consent_regrant_after_revoke_restores_retrieval(client, ingest):
+    ingest("I prefer Python for data science", source="obsidian")
+    _set_consent(client, "regrant-1", "revoked")
+    assert retrieve(client, "user-a", "data science language").json()["facets"] == []
+    _set_consent(client, "regrant-2", "active")
+    assert retrieve(client, "user-a", "data science language").json()["facets"]
+
+
+def test_consent_revoke_after_grant_hides_claims(client, ingest):
+    ingest("I prefer Python for data science", source="obsidian")
+    _set_consent(client, "grant-then-revoke-1", "active")
+    assert retrieve(client, "user-a", "data science language").json()["facets"]
+    _set_consent(client, "grant-then-revoke-2", "revoked")
+    assert retrieve(client, "user-a", "data science language").json()["facets"] == []
+
+
+def test_expired_consent_grant_hides_claims(client, ingest):
+    ingest("I prefer Python for data science", source="obsidian")
+    _set_consent(client, "expired-1", "active", expires_at="2020-01-01T00:00:00Z")
+    assert retrieve(client, "user-a", "data science language").json()["facets"] == []
+    _set_consent(client, "expired-2", "active", expires_at="2999-01-01T00:00:00Z")
+    assert retrieve(client, "user-a", "data science language").json()["facets"]
+
+
 def test_deletion_propagates_to_retrieval(client, ingest):
     ingest("My durable project codename is cedar")
     assert retrieve(client, "user-a", "project codename").json()["facets"]

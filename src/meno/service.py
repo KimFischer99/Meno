@@ -370,6 +370,7 @@ class MenoService:
             raise ValueError("batch event_id values must be unique")
 
         results: list[dict[str, Any]] = []
+        watermarks: dict[str, datetime | None] = {}
         with self._audit_chain_lock, self.session_factory.begin() as session:
             existing = {
                 event.id: event
@@ -393,6 +394,23 @@ class MenoService:
                 provided_hash = request.metadata.get("content_hash")
                 if provided_hash and provided_hash != content_hash:
                     raise ValueError("content_hash mismatch")
+                if request.user_id not in watermarks:
+                    watermarks[request.user_id] = self._deletion_watermark(session, request.user_id)
+                watermark = watermarks[request.user_id]
+                if watermark is not None and _aware(request.occurred_at) <= watermark:
+                    # Same rule as single ingest: a replayed batch must not resurrect
+                    # events the user already asked to be forgotten.
+                    results.append(
+                        {
+                            "event_id": event_id,
+                            "state_revision": self._revision(session, request.user_id),
+                            "idempotent_replay": False,
+                            "accepted": False,
+                            "skipped": True,
+                            "reason": "before_deletion_watermark",
+                        }
+                    )
+                    continue
                 session.add(
                     Event(
                         id=event_id,
@@ -438,7 +456,7 @@ class MenoService:
                     }
                 )
         return {
-            "accepted": len(results),
+            "accepted": sum(1 for result in results if not result.get("skipped")),
             "policy_version": self.settings.policy_version,
             "events": results,
         }
@@ -1822,15 +1840,8 @@ class MenoService:
                 for history in histories_by_claim.values()
                 for historical in history
             )
-            revoked_sources = set(
-                session.scalars(
-                    select(Consent.source).where(
-                        Consent.user_id == request.user_id,
-                        Consent.source.in_(source_types),
-                        Consent.purpose.in_([request.purpose, scope]),
-                        Consent.status == "revoked",
-                    )
-                ).all()
+            revoked_sources = self._revoked_consent_sources(
+                session, request.user_id, source_types, [request.purpose, scope]
             )
             clarification_opportunities = self._relevant_clarification_opportunities(
                 session, request
@@ -2655,6 +2666,43 @@ class MenoService:
             frontier = next_frontier
         return {
             claim_id: list(reversed(history)) for claim_id, history in chains.items() if history
+        }
+
+    def _revoked_consent_sources(
+        self,
+        session: Session,
+        user_id: str,
+        source_types: set[str],
+        purposes: list[str],
+    ) -> set[str]:
+        """Sources whose current consent blocks retrieval.
+
+        Consent rows are append-only, so only the newest row per (source, purpose)
+        counts. A source is blocked when that row is revoked, or is active but expired,
+        for any of the given purposes. Exact timestamp ties resolve to the stricter row.
+        """
+        rows = session.scalars(
+            select(Consent).where(
+                Consent.user_id == user_id,
+                Consent.source.in_(source_types),
+                Consent.purpose.in_(purposes),
+            )
+        ).all()
+
+        def recency(row: Consent) -> tuple[datetime, bool, str]:
+            return _aware(row.granted_at), row.status == "revoked", row.id
+
+        newest: dict[tuple[str, str], Consent] = {}
+        for row in rows:
+            key = (row.source, row.purpose)
+            if key not in newest or recency(row) > recency(newest[key]):
+                newest[key] = row
+        now = _now()
+        return {
+            source
+            for (source, _purpose), row in newest.items()
+            if row.status == "revoked"
+            or (row.expires_at is not None and _aware(row.expires_at) <= now)
         }
 
     def _admit_historical_claim(
