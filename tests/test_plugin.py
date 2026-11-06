@@ -177,7 +177,7 @@ def test_spool_keeps_accepting_events_behind_rejected_event(tmp_path, monkeypatc
     assert provider._spool.dead_letter_count() == 1
 
 
-@pytest.mark.parametrize("failure", [500, 429, 408, "connect"])
+@pytest.mark.parametrize("failure", [500, 429, 408, 401, 403, "connect"])
 def test_transient_failures_are_retried_and_row_stays_spooled(tmp_path, monkeypatch, failure):
     attempts = []
 

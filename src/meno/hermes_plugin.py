@@ -40,7 +40,9 @@ log = logging.getLogger(__name__)
 
 DEAD_LETTER_REASON_CHARS = 500
 # Client errors that may succeed on a later attempt; every other 4xx is permanent.
-RETRYABLE_CLIENT_STATUSES = frozenset({408, 429})
+# 401/403 mean the sidecar credentials are wrong or expired, which affects every
+# event alike, so they must not drain the whole queue into the dead letter table.
+RETRYABLE_CLIENT_STATUSES = frozenset({401, 403, 408, 429})
 
 
 AUDIT_SCHEMA = {
