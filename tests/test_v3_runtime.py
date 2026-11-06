@@ -1,9 +1,11 @@
 from dataclasses import replace
+from datetime import UTC, datetime, timedelta
 from threading import Event, Thread
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
-from meno.db import AuditEvent
+from meno.db import AuditEvent, Claim, Outbox
+from meno.db import Event as EventRow
 from meno.hermes_plugin import DurableSpool, MenoMemoryProvider
 
 
@@ -105,3 +107,90 @@ def test_queued_hermes_turn_cannot_restore_deleted_memory(client, tmp_path):
     assert replay.status_code == 202
     assert replay.json()["reason"] == "before_deletion_watermark"
     assert replay.json()["accepted"] is False
+
+
+def test_batch_replay_cannot_restore_deleted_memory(client):
+    def batch_event(event_id, text, occurred_at):
+        return {
+            "user_id": "batch-deleted-user",
+            "event_id": event_id,
+            "occurred_at": occurred_at.isoformat(),
+            "source": {"type": "hermes_turn", "session_id": "batch-session"},
+            "content": {"role": "user", "text": text},
+            "consent_scope": ["personalization"],
+        }
+
+    def post_batch(key, events):
+        response = client.post(
+            "/v1/ingest/batch", headers={"Idempotency-Key": key}, json={"events": events}
+        )
+        assert response.status_code == 202, response.text
+        return response.json()
+
+    def retrieve_facets():
+        response = client.post(
+            "/v1/retrieve",
+            json={
+                "user_id": "batch-deleted-user",
+                "purpose": "response_personalization",
+                "context": {"query": "project codename", "task_type": "test"},
+                "constraints": {"min_confidence": 0.5},
+            },
+        )
+        return response.json()["facets"]
+
+    def row_counts(service):
+        with service.session_factory() as session:
+            return tuple(
+                session.scalar(select(func.count()).select_from(model))
+                for model in (EventRow, Outbox, Claim)
+            )
+
+    service = client.app.state.meno
+    past = datetime.now(UTC) - timedelta(days=1)
+    original = [
+        batch_event("batch-del-1", "My project codename is cedar", past),
+        batch_event("batch-del-2", "I prefer Python for data work", past),
+    ]
+    assert post_batch("batch-del-first", original)["accepted"] == 2
+    service.process_outbox()
+    assert retrieve_facets()
+
+    deletion = client.post(
+        "/v1/deletions",
+        headers={"Idempotency-Key": "forget-batch-deleted-user"},
+        json={"user_id": "batch-deleted-user", "scope": "all"},
+    )
+    assert deletion.status_code == 200
+    assert retrieve_facets() == []
+    counts_after_delete = row_counts(service)
+
+    replay = post_batch("batch-del-replay", original)
+    assert replay["accepted"] == 0
+    assert [item["event_id"] for item in replay["events"]] == ["batch-del-1", "batch-del-2"]
+    for item in replay["events"]:
+        assert item["accepted"] is False
+        assert item["skipped"] is True
+        assert item["reason"] == "before_deletion_watermark"
+    service.process_outbox()
+    assert row_counts(service) == counts_after_delete
+    assert retrieve_facets() == []
+
+    # Events newer than the watermark in the same batch are still accepted.
+    future = datetime.now(UTC) + timedelta(days=1)
+    mixed = post_batch(
+        "batch-del-mixed",
+        [
+            original[0],
+            batch_event("batch-del-3", "My project codename is willow", future),
+        ],
+    )
+    assert mixed["accepted"] == 1
+    skipped, accepted = mixed["events"]
+    assert skipped["skipped"] is True and skipped["reason"] == "before_deletion_watermark"
+    assert accepted["event_id"] == "batch-del-3"
+    assert accepted.get("skipped") is None
+    assert accepted["idempotent_replay"] is False
+    with service.session_factory() as session:
+        assert session.get(EventRow, "batch-del-3") is not None
+        assert session.get(EventRow, "batch-del-1") is None
